@@ -1,0 +1,50 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: sonarqube-scan
+  labels:
+    app.kubernetes.io/version: "0.4"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.17.0"
+    tekton.dev/categories: Security
+    tekton.dev/tags: security
+    tekton.dev/displayName: "sonarqube scanner"
+    tekton.dev/platforms: "linux/amd64"
+spec:
+  description: >-
+    The following task can be used to perform static analysis on the source code
+    provided the SonarQube server is hosted
+
+    SonarQube is the leading tool for continuously inspecting the Code Quality and Security
+    of your codebases, all while empowering development teams. Analyze over 25 popular
+    programming languages including C#, VB.Net, JavaScript, TypeScript and C++. It detects
+    bugs, vulnerabilities and code smells across project branches and pull requests.
+
+  workspaces:
+    - name: source
+      description: "Workspace containing the code which needs to be scanned by SonarQube"
+  params:
+    - name: SONAR_HOST_URL
+      description: SonarQube server URL
+      default: "https://sonarqube.herosonsa.co.kr"
+    - name: SONAR_PROJECT_KEY
+      description: Project's unique key
+    - name: SOURCE_TO_SCAN
+      description: "Comma-separated paths to directories containing main source files"
+    - name: SONAR_SCANNER_IMAGE
+      description: "The sonarqube scanner CLI image which will run the scan"
+      default: "tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/sonar-cli:hero"
+    - name: SONAR_LOGIN_KEY
+      description: Token within the sonarqube credentials workspace
+      default: "squ_25d8ac9781f94e799eff38e958faa7d9c44b602a"
+  steps:
+    - name: sonar-scan
+      image: $(params.SONAR_SCANNER_IMAGE)
+      workingDir: $(workspaces.source.path)/$(params.SOURCE_TO_SCAN)
+      script: |
+        #!/usr/bin/env sh
+        set -xe
+        sonar-scanner -Dsonar.projectKey=$(params.SONAR_PROJECT_KEY) \
+        -Dsonar.host.url=$(params.SONAR_HOST_URL) -Dsonar.login=$(params.SONAR_LOGIN_KEY) \
+        -Dsonar.sources=. -Dsonar.java.binaries=.
+

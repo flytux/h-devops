@@ -1,0 +1,22 @@
+vg:
+  name: vg-app1
+  pvs: /dev/sdc
+  pesize: 4
+  fs_type: xfs
+
+lv:
+  sw:
+    name: lv-sw
+    size: 10g
+    path: /hro_app/sw1
+    mode: "0755"
+  app:
+    name: lv-app
+    size: 20g
+    path: /hro_app/app1
+    mode: "0755"
+  log:
+    name: lv-log
+    size: +100%FREE #insufficient free space ISSUE
+    path: /hro_app/log1
+    mode: "0755"

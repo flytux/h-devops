@@ -1,0 +1,146 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: app-channel-hro-prmadm-backend
+spec:
+  params:
+    - name: build-stage
+    - name: git-url
+    - name: git-revision
+    - name: git-username
+    - name: clone-to-directory
+    - name: image-url
+#    - name: argo-app-name
+    - name: gitops-url
+#    - name: argo-url
+    - name: gitops-revision
+    - name: gitops-path
+    - name: deploy-manifest
+    - name: sonar-project-key
+    - name: rollout-strategy
+    - name: pipeline-name
+    - name: mm-channel
+  workspaces:
+    - name: source 
+    - name: gitops 
+    - name: manifest-dir
+  tasks:
+    - name: notify-pipeline-start
+      taskRef:
+        name: mm-notify-start
+      params:
+        - name: pipeline-name
+          value: $(params.pipeline-name)
+        - name: git-username
+          value: $(params.git-username)
+        - name: CHANNEL_NAME
+          value: $(params.mm-channel)
+    - name: generate-id
+      taskRef:
+        name: generate-build-id
+      params:
+        - name: base-version
+          value: $(params.build-stage)
+    - name: clone-sources
+      taskRef:
+        name: git-clone
+      runAfter:
+        - generate-id
+      params:
+        - name: git-url
+          value: $(params.git-url)
+        - name: git-revision
+          value: $(params.git-revision)
+        - name: subdirectory
+          value: $(params.clone-to-directory)
+      workspaces:
+        - name: output
+          workspace: source
+    - name: source-scan
+      taskRef:
+        name: sonarqube-scan
+      runAfter:
+        - clone-sources
+      params:
+        - name: SONAR_PROJECT_KEY
+          value: $(params.sonar-project-key)
+        - name: SOURCE_TO_SCAN
+          value: $(params.clone-to-directory)
+      workspaces:
+        - name: source
+          workspace: source
+    - name: build-image
+      taskRef:
+        name: jib-maven
+      runAfter:
+        - clone-sources
+      params:
+        - name: IMAGE
+          value: $(params.image-url):$(tasks.generate-id.results.build-id)
+        - name: DIRECTORY
+          value: $(params.clone-to-directory)
+        - name: build-stage
+          value: $(params.build-stage)
+      workspaces:
+        - name: source
+          workspace: source
+    - name: image-scan
+      taskRef:
+        name: trivy-scan
+      runAfter:
+        - build-image
+      params:
+        - name: IMAGE
+          value: $(params.image-url):$(tasks.generate-id.results.build-id)
+      workspaces:
+        - name: manifest-dir
+          workspace: manifest-dir
+    - name: update-gitops
+      taskRef:
+        name: update-gitops
+      runAfter:
+        - build-image
+      params:
+#        - name: argo-url
+#          value: $(params.argo-url) 
+        - name: gitops-revision
+          value: $(params.gitops-revision)
+        - name: deploy-manifest
+          value: $(params.deploy-manifest)
+        - name: gitops-path
+          value: $(params.gitops-path)
+#        - name: argo-app-name
+#          value: $(params.argo-app-name)
+        - name: gitops-url
+          value: $(params.gitops-url)
+        - name: rollout-strategy
+          value: $(params.rollout-strategy)
+        - name: image-url
+          value: $(params.image-url)
+        - name: build-id
+          value: $(tasks.generate-id.results.build-id)
+      workspaces:
+        - name: gitops
+          workspace: gitops
+  finally:
+    - name: clean-workspace
+      taskRef:
+        name: clean-workspace
+      params:
+        - name: subdirectory
+          value: $(params.clone-to-directory)
+      workspaces:
+        - name: output
+          workspace: source
+    - name: report-result
+      taskRef:
+        #name: print-result
+        name: mm-send-result
+      params:
+        - name: pipeline-name
+          value: $(params.pipeline-name)
+        - name: git-username
+          value: $(params.git-username)
+        - name: CHANNEL_NAME
+          value: $(params.mm-channel)
+

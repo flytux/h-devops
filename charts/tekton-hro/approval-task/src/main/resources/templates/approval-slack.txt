@@ -1,0 +1,3 @@
+\{
+	"text": "{inputs.spec.description.raw}\nTo approve or reject <{link}fGpvaG5AZW1haWwuY29t|view task details>"
+\}

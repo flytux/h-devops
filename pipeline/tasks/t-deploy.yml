@@ -1,0 +1,69 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: deploy
+spec:
+  params:
+  - name: argo-url
+  - name: gitops-revision
+  - name: gitops-url
+  - name: deploy-manifest
+  - name: gitops-path
+  - name: argo-app-name
+  - name: rollout-strategy
+  workspaces:
+  - name: gitops
+  stepTemplate:
+    envFrom:
+    - secretRef:
+        name: argocd-env-secret
+    env:
+    - name: ARGOCD_SERVER
+      value: $(params.argo-url)
+
+  steps:
+  - name: git-checkout
+    #image: alpine/git:v2.26.2
+    image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/alpine/git:v2.26.2
+    workingDir: "$(workspaces.gitops.path)"
+    script: |
+      #!/usr/bin/env sh
+      #git init
+      #git remote add origin $(params.gitops-url)
+      #git fetch --depth 1 origin $(params.gitops-revision)
+      #git checkout $(params.gitops-revision)
+      rm -rf .git
+      rm -rf *
+      git clone -b $(params.gitops-revision) $(params.gitops-url) .
+  - name: update-yaml
+    #image: alpine/git:v2.26.2
+    image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/alpine/git:v2.26.2
+    workingDir: "$(workspaces.gitops.path)"
+    script: |
+      #!/usr/bin/env sh
+      set -e
+      echo "updating image & strategy to $(params.rollout-strategy)"
+      sed -i "s|../base/.*$|../base/$(params.rollout-strategy)|" $(params.gitops-path)/$(params.deploy-manifest)
+  - name: commit-push-changes-gitops
+    #image: alpine/git:v2.26.2
+    image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/alpine/git:v2.26.2
+    workingDir: "$(workspaces.gitops.path)"
+    script: |
+      #!/usr/bin/env sh
+      set -e
+      git config --global user.email "devops@herosonsa.co.kr"
+      git config --global user.name "devops"
+      git config --global http.postBuffer 524288000
+      git add .
+      git commit --allow-empty -m "[tekton] updating image & strategy to $(params.rollout-strategy)"
+      git push origin $(params.gitops-revision)
+  - name: argocd-rollout
+    #image: quay.io/argoproj/argocd:v2.4.8
+    image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/argoproj/argocd:v2.4.8
+    script: |
+      #!/usr/bin/env sh
+      #set -e
+      argocd app sync $(inputs.params.argo-app-name) --insecure
+      #exit 0
+      #argocd app wait $(inputs.params.argo-app-name) --sync --health --operation --insecure
+

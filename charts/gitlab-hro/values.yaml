@@ -1,0 +1,133 @@
+global:
+  pod:
+    labels:
+      name: cicd
+  image: 
+    pullSecrets: 
+      - name: hero-reg
+
+  edition: ce
+
+  gitlabVersion: 15.11.3
+
+  communityImages:
+    migrations:
+      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/gitlab-org/build/cng/gitlab-toolbox-ce
+    sidekiq:
+      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/gitlab-org/build/cng/gitlab-sidekiq-ce
+    toolbox:
+      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/gitlab-org/build/cng/gitlab-toolbox-ce
+    webservice:
+      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/gitlab-org/build/cng/gitlab-webservice-ce
+    workhorse:
+      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/gitlab-org/build/cng/gitlab-workhorse-ce
+
+  hosts:
+    domain: herosonsa.co.kr
+
+  ingress:
+    provider: nginx
+    class: nginx
+    enabled: true
+    tls:
+      enabled: true
+      secretName: hro-tls-secret
+
+  appConfig:
+    omniauth:
+      enabled: true
+      syncEmailFromProvider: 'saml'
+      syncProfileAttributes: ['email']
+      allowSingleSignOn: ['saml']
+      blockAutoCreatedUsers: false
+      autoLinkSamlUser: true
+      providers:
+        - secret: gitlab-saml
+
+  certificates:
+    image:
+      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/gitlab-org/build/cng/certificates
+      pullSecrets: 
+        - name: hero-reg
+  kubectl:
+    image:
+      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/gitlab-org/build/cng/kubectl
+      pullSecrets: 
+        - name: hero-reg
+  busybox:
+    image:
+      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/gitlab-org/cloud-native/mirror/images/busybox
+      pullSecrets: 
+        - name: hero-reg
+
+certmanager-issuer:
+  email: email@example.com
+
+certmanager:
+  installCRDs: false
+  install: false
+
+nginx-ingress:
+  enabled: false
+
+prometheus:
+  install: false
+
+redis:
+  install: true
+
+postgresql:
+  install: true
+
+shared-secrets:
+  enabled: true
+  selfsign:
+    image:
+      pullSecrets: 
+        - name: hero-reg
+      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/gitlab-org/build/cng/cfssl-self-sign
+
+upgradeCheck:
+  enabled: true
+  image: 
+    repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/gitlab-org/cloud-native/mirror/images/busybox
+    pullPolicy: IfNotPresent
+    pullSecrets: 
+      - name: hero-reg
+
+gitlab-runner:
+  install: false
+
+gitlab:
+  gitaly:
+    image:
+      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/gitlab-org/build/cng/gitaly
+  gitlab-exporter:
+    image:
+      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/gitlab-org/build/cng/gitlab-exporter
+  gitlab-shell:
+    image:
+      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/gitlab-org/build/cng/gitlab-shell
+  kas:
+    image:
+      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/gitlab-org/build/cng/gitlab-kas
+
+registry:
+  image:
+    repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/gitlab-org/build/cng/gitlab-container-registry
+
+redis:
+  global:
+    imageRegistry: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops
+
+minio:
+
+  image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/minio/minio
+
+  minioMc:
+    image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/minio/mc
+
+postgresql:
+  global:
+    imageRegistry: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops
+

@@ -1,0 +1,109 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: app-core-core-front-test-vm
+spec:
+  params:
+    - name: build-stage
+    - name: git-url
+    - name: git-revision
+    - name: git-username
+    - name: clone-to-directory
+    - name: image-url
+    - name: remote-ip
+    - name: sonar-project-key
+    - name: pipeline-name
+  workspaces:
+    - name: source
+    - name: credentials
+    - name: manifest-dir
+  tasks:
+    - name: notify-pipeline-start
+      taskRef:
+        name: mm-notify-start
+      params:
+        - name: pipeline-name
+          value: $(params.pipeline-name)
+        - name: git-username
+          value: $(params.git-username)
+    - name: generate-id
+      taskRef:
+        name: generate-build-id
+      params:
+        - name: base-version
+          value: $(params.build-stage)
+    - name: clone-sources
+      taskRef:
+        name: git-clone
+      runAfter:
+        - generate-id
+      params:
+        - name: git-url
+          value: $(params.git-url)
+        - name: git-revision
+          value: $(params.git-revision)
+        - name: subdirectory
+          value: $(params.clone-to-directory)
+      workspaces:
+        - name: output
+          workspace: source
+    - name: source-scan
+      taskRef:
+        name: sonarqube-scan
+      runAfter:
+        - clone-sources
+      params:
+        - name: SONAR_PROJECT_KEY
+          value: $(params.sonar-project-key)
+        - name: SOURCE_TO_SCAN
+          value: $(params.clone-to-directory)
+      workspaces:
+        - name: source
+          workspace: source
+    - name: build-image
+      taskRef:
+        name: buildah
+      runAfter:
+        - clone-sources
+      params: 
+        - name: IMAGE
+          value: $(params.image-url):$(tasks.generate-id.results.build-id)
+        - name: CONTEXT
+          value: $(params.clone-to-directory)
+      workspaces:
+        - name: source
+          workspace: source
+    - name: image-scan
+      taskRef:
+        name: trivy-scan
+      runAfter:
+        - build-image
+      params:
+        - name: IMAGE
+          value: $(params.image-url):$(tasks.generate-id.results.build-id)
+      workspaces:
+        - name: manifest-dir
+          workspace: manifest-dir
+    - name: vm-deploy
+      taskRef:
+        name: vm-deploy
+      runAfter:
+        - build-image
+      params:
+        - name: remote-ip
+          value: $(params.remote-ip)
+        - name: image
+          value: $(params.image-url):$(tasks.generate-id.results.build-id)
+      workspaces:
+        - name: credentials
+          workspace: credentials
+  finally:
+    - name: report-result
+      taskRef:
+        #name: print-result
+        name: mm-send-result
+      params:
+        - name: pipeline-name
+          value: $(params.pipeline-name)
+        - name: git-username
+          value: $(params.git-username)

@@ -1,0 +1,10 @@
+---
+- name : init
+  hosts: hello_hro
+  become: yes
+
+  roles:
+#    - common
+#    - web
+#    - rhel-system-roles.storage
+    - storage

@@ -1,0 +1,13 @@
+---
+image: "tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/elastic-system/elasticsearch/elasticsearch"
+imageTag: "8.5.1"
+
+# Hard means that by default pods will only be scheduled if there are enough nodes for them
+# and that they will never end up on the same node. Setting this to soft will do this "best effort"
+antiAffinity: "soft"
+
+imagePullSecrets: 
+  - name: hero-reg
+
+tests:
+  enabled: false

@@ -1,0 +1,40 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: dev-app-core-core-front-test-vm-pipeline-
+spec:
+  serviceAccountName: sa-pipeline-runner
+  pipelineRef:
+      name: app-core-core-front-test-vm
+  podTemplate:
+    imagePullSecrets:
+      - name: hero-reg
+  params:
+  - name: build-stage
+    value: "dev"
+  - name: git-url
+    value: "https://gitlab.herosonsa.co.kr/app/core/core-front-test.git"
+  - name: git-revision
+    value: "dev"
+  - name: git-username
+    value: "tekton-dashboard"
+  - name: clone-to-directory
+    value: "dev"
+  - name: image-url
+    value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/core/core-front-test"
+  - name: remote-ip
+    value: "10.3.20.12"
+  - name: sonar-project-key
+    value: "dev-app-core-core-front-test"
+  - name: pipeline-name
+    value: $(context.pipelineRun.name)
+  workspaces:
+  - name: source
+    persistentvolumeclaim:
+      claimName: pvc-hro-core-front
+  - name: credentials
+    secret:
+      secretName: hro-vm-auth
+  - name: manifest-dir
+    emptyDir: {}
+

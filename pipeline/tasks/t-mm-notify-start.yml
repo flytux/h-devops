@@ -1,0 +1,33 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: mm-notify-start
+  annotations:
+    tekton.dev/platforms: "linux/amd64"
+spec:
+  description: >-
+       Send mattermost message using bot account
+
+  params:
+    - name: MM_HOST
+      default: "http://mattermost-team-edition.mattermost:8065"
+    - name: USER_ID
+      default: "hero-devops"
+    - name: ACCESS_TOKEN
+      default: "tmcxqzkufbbhux8n8q9wefjpmw"
+    - name: CHANNEL_NAME
+      default: "hro-build:devops-sample"
+    - name: MESSAGE
+      default: "파이프라인 시작"
+    - name: pipeline-name
+    - name: git-username
+      default: "tekton dashboard"
+  steps:
+    - name: mmctl-notify-start
+      image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/mmtctl:hero
+      script: |
+        #!/usr/bin/env sh
+        set -xe
+        mmctl auth login $(params.MM_HOST) --name $(params.USER_ID) --access-token $(params.ACCESS_TOKEN)
+        mmctl post create $(params.CHANNEL_NAME) --message "$(params.MESSAGE) : $(params.git-username) : $(params.pipeline-name)"
+        echo "============ mattermost message posted =============="

@@ -1,0 +1,43 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: hro-dev-file-sync-pipeline-
+spec:
+  serviceAccountName: sa-pipeline-runner
+  pipelineRef:
+          name: hro-dev-file-sync
+  params:
+  - name: git-url
+    value: "https://gitlab.herosonsa.co.kr/devops-infra/file-sample.git"
+  - name: git-revision
+    value: "dev"
+  - name: git-username
+    value: "tekton-dashboard"
+  - name: clone-to-directory
+    value: $(context.pipelineRun.name)
+  - name: sonar-project-key
+    valeu: "core-fwk-backend-dev"
+  - name: direction
+    value: "local-to-remote"
+  - name: local-path
+    value: $(context.pipelineRun.name)
+  - name: remote-ip
+    value: "10.3.20.10"
+  - name: remote-username
+    value: "hroadm"
+  - name: remote-path
+    value: "/home/kubeadm/file"
+  - name: pipeline-name
+    value: $(context.pipelineRun.name)
+  - name: mm-channel
+    value: "core:hro-fwk-backend"
+  workspaces:
+  - name: source
+    persistentvolumeclaim:
+      claimName: pvc-app-core-hro-fwk-backend
+  - name: ssh-creds
+    secret:
+      secretName: hro-ssh-secret
+
+
+

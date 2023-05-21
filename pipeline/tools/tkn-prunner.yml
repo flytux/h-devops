@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pr-delete
+  namespace: devops-pipelines
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - args:
+                - '--all'
+                - '--force'
+                - '-i'
+                - '--keep'
+                - '3'
+              command:
+                - tkn
+                - pr
+                - delete
+              image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/tkn:hero
+              imagePullPolicy: Always
+              name: container-0
+          imagePullSecrets:
+            - name: hero-reg
+          restartPolicy: Never
+          schedulerName: default-scheduler
+          terminationGracePeriodSeconds: 30
+  schedule: '*/30 * * * *'
+  successfulJobsHistoryLimit: 3

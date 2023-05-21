@@ -1,0 +1,96 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: test-app-channel-hro-mobile-frontend-listener
+spec:
+  serviceAccountName: sa-pipeline-trigger
+  triggers:
+    - name: build-trigger
+      interceptors:
+        - name: "CEL filter: merge to test branch only"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_kind in ['merge_request']"
+          - name: "filter"
+            value: "body.object_attributes.source_branch in ['dev']"
+          - name: "filter"
+            value: "body.object_attributes.target_branch in ['test']"
+          - name: "filter"
+            value: "body.object_attributes.action in ['merge']"
+      bindings:
+        - ref: test-app-channel-hro-mobile-frontend-binding
+      template:
+        ref: test-app-channel-hro-mobile-frontend-template
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: test-app-channel-hro-mobile-frontend-binding
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.object_attributes.last_commit.id)
+    - name: gitrepositoryurl
+      value: $(body.project.http_url)
+    - name: gitusername
+      value: $(body.user.username)
+    - name: project-name
+      value: $(body.project.name)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: test-app-channel-hro-mobile-frontend-template
+spec:
+  params:
+    - name: gitrevision
+      description: The git revision
+    - name: gitrepositoryurl
+      description: The git repository url
+    - name: gitusername
+      description: The git username
+    - name: project-name
+      description: The project name
+  resourcetemplates:     
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: test-app-channel-hro-mobile-frontend-pipeline-
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-channel-hro-mobile-frontend-approval
+        params:
+        - name: build-stage
+          value: "test"
+        - name: git-url
+          value: $(tt.params.gitrepositoryurl)
+        - name: git-revision
+          value: $(tt.params.gitrevision)
+        - name: git-username
+          value: $(tt.params.gitusername)
+        - name: clone-to-directory
+          value: "$(tt.params.gitrevision)"
+        - name: image-url
+          value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/channel/$(tt.params.project-name)"
+        - name: remote-ip
+          value: "10.3.20.12"
+        - name: application-name
+          value: "channel-mobile-frontend-test"
+        - name: sonar-project-key
+          value: "channel-mobile-frontend-test"
+        - name: pipeline-name
+          value: $(context.pipelineRun.name)
+        - name: mm-channel
+          value: "channel:$(tt.params.project-name)"
+        workspaces:
+        - name: source
+          persistentvolumeclaim:
+            claimName: pvc-app-channel-$(tt.params.project-name)
+        - name: credentials
+          secret:
+             secretName: hro-vm-auth
+        - name: manifest-dir
+          emptyDir: {}

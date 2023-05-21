@@ -1,0 +1,131 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    workload.user.cattle.io/workloadselector: apps.deployment-build-tekton-oauth2-proxy
+  name: tekton-oauth2-proxy
+  namespace: devops-pipelines
+spec:
+  selector:
+    matchLabels:
+      workload.user.cattle.io/workloadselector: apps.deployment-build-tekton-oauth2-proxy
+  template:
+    metadata:
+      labels:
+        workload.user.cattle.io/workloadselector: apps.deployment-build-tekton-oauth2-proxy
+    spec:
+      containers:
+        - args:
+            - '--http-address'
+            - 0.0.0.0:4180
+          env:
+            - name: OAUTH2_PROXY_UPSTREAMS
+              value: http://tekton-dashboard.tekton-pipelines:9097
+            - name: OAUTH2_PROXY_PROVIDER_DISPLAY_NAME
+              value: Keycloak
+            - name: OAUTH2_PROXY_OIDC_ISSUER_URL
+              value: https://keycloak.herosonsa.co.kr/realms/devops
+            - name: OAUTH2_PROXY_CLIENT_ID
+              value: tekton
+            - name: OAUTH2_PROXY_CLIENT_SECRET
+              value: RMqlLSO6oWuAHoWBhCnTmNIk9u5PPk4d
+            - name: OAUTH2_PROXY_PASS_ACCESS_TOKEN
+              value: 'true'
+            - name: OAUTH2_PROXY_SKIP_PROVIDER_BUTTON
+              value: 'true'
+            - name: OAUTH2_PROXY_EMAIL_DOMAINS
+              value: '*'
+            - name: OAUTH2_PROXY_REDIRECT_URL
+              value: https://tekton.herosonsa.co.kr/oauth2/callback
+            - name: OAUTH2_PROXY_COOKIE_SECRET
+              value: cYW8ox+3ySQZ5M+92hsZhnUqiQqM5U7B
+            - name: OAUTH2_PROXY_LOGIN_URL
+              value: >-
+                https://keycloak.herosonsa.co.kr/realms/devops/protocol/openid-connect/auth
+            - name: OAUTH2_PROXY_REDEEM_URL
+              value: >-
+                https://keycloak.herosonsa.co.kr/realms/devops/protocol/openid-connect/token
+            - name: OAUTH2_PROXY_OIDC_JWKS_URL
+              value: >-
+                https://keycloak.herosonsa.co.kr/realms/devops/protocol/openid-connect/certs
+            - name: OAUTH2_PROXY_PROVIDER
+              value: keycloak-oidc
+            - name: OAUTH2_PROXY_INSECURE_OIDC_ALLOW_UNVERIFIED_EMAIL
+              value: 'true'
+          image: >-
+            tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/bitnami/oauth2-proxy:7.3.0
+          imagePullPolicy: Always
+          name: oauth2-proxy
+          ports:
+            - containerPort: 4180
+              name: http
+              protocol: TCP
+      imagePullSecrets:
+        - name: hero-reg
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tekton-oauth2-proxy
+  namespace: devops-pipelines
+spec:
+  ports:
+    - name: http
+      port: 4180
+      protocol: TCP
+      targetPort: 4180
+  selector:
+    workload.user.cattle.io/workloadselector: apps.deployment-build-tekton-oauth2-proxy
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+    nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
+  labels:
+  name: tekton-auth
+  namespace: tekton-pipelines
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: tekton.herosonsa.co.kr
+      http:
+        paths:
+          - backend:
+              service:
+                name: tekton-dashboard
+                port:
+                  number: 9097
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - tekton.herosonsa.co.kr
+      secretName: hro-tls-secret
+ 
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tekton-oauth2-proxy
+  namespace: devops-pipelines
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: tekton.herosonsa.co.kr
+      http:
+        paths:
+          - backend:
+              service:
+                name: tekton-oauth2-proxy
+                port:
+                  number: 4180
+            path: /oauth2
+            pathType: Prefix
+  tls:
+    - hosts:
+        - tekton.herosonsa.co.kr
+      secretName: hro-tls-secret

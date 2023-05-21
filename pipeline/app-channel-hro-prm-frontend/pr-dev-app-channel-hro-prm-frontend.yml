@@ -1,0 +1,43 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: dev-app-channel-hro-prm-frontend-pipeline-
+spec:
+  serviceAccountName: sa-pipeline-runner
+  pipelineRef:
+          name: app-channel-hro-prm-frontend
+  params:
+  - name: build-stage
+    value: "dev"
+  - name: git-url
+    value: "https://gitlab.herosonsa.co.kr/app/channel/hro-prm-frontend.git"
+  - name: git-revision
+    value: "dev"
+  - name: git-username
+    value: "tekton-dashboard"
+  - name: clone-to-directory
+    value: $(context.pipelineRun.name)
+  - name: image-url
+    value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/channel/hro-prm-frontend"
+  - name: remote-ip
+    value: "10.3.20.9"
+  - name: application-name
+    value: "channel-prm-frontend-dev"
+  - name: sonar-project-key
+    value: "channel-prm-frontend-dev"
+  - name: pipeline-name
+    value: $(context.pipelineRun.name)
+  - name: mm-channel
+    value: "chl:hro-prm-frontend"
+  workspaces:
+  - name: source
+    persistentvolumeclaim:
+      claimName: pvc-app-channel-hro-prm-frontend
+  - name: credentials
+    secret:
+      secretName: hro-vm-auth
+  - name: manifest-dir
+    emptyDir: {}
+
+
+

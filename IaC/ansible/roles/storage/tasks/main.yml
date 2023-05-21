@@ -1,0 +1,83 @@
+---
+- name: task for creating volume group
+  lvg:
+    vg: "{{ vg.name }}"
+    pvs: "{{ vg.pvs }}"
+    pvresize: true
+#    pesize: "{{ vg.pesize }}"
+
+- name: SW-task for creating logical volume
+  lvol:
+    vg: "{{ vg.name }}"
+    lv:  "{{ lv.sw.name }}"
+    size: "{{ lv.sw.size }}"
+    force: yes
+
+- name: APP-task for creating logical volume
+  lvol:
+    vg: "{{ vg.name }}"
+    lv:  "{{ lv.app.name }}"
+    size: "{{ lv.app.size }}"
+    force: yes
+
+- name: LOG-task for creating logical volume
+  lvol:
+    vg: "{{ vg.name }}"
+    lv:  "{{ lv.log.name }}"
+    size: "{{ lv.log.size }}"
+    force: yes
+
+- name: SW-Create directory
+  file:
+    path: "{{ lv.sw.path }}"
+    state: directory
+    mode: "{{ lv.sw.mode }}"
+
+- name: APP-Create directory
+  file:
+    path: "{{ lv.app.path }}"
+    state: directory
+    mode: "{{ lv.app.mode }}"
+
+- name: LOG-Create directory
+  file:
+    path: "{{ lv.log.path }}"
+    state: directory
+    mode: "{{ lv.log.mode }}"
+
+
+- name: SW-format the xfs filesystem
+  filesystem:
+    fstype: "{{ vg.fs_type }}"
+    dev: "/dev/{{ vg.name }}/{{ lv.sw.name }}"
+
+- name: APP-format the xfs filesystem
+  filesystem:
+    fstype: "{{ vg.fs_type }}"
+    dev: "/dev/{{ vg.name }}/{{ lv.app.name }}"
+
+- name: LOG-format the xfs filesystem
+  filesystem:
+    fstype: "{{ vg.fs_type }}"
+    dev: "/dev/{{ vg.name }}/{{ lv.log.name }}"
+
+- name: SW-mount the lv
+  mount:
+    path: "{{ lv.sw.path }}"
+    src: "/dev/{{ vg.name }}/{{ lv.sw.name }}"
+    fstype: "{{ vg.fs_type }}"
+    state: mounted
+
+- name: APP-mount the lv
+  mount:
+    path: "{{ lv.app.path }}"
+    src: "/dev/{{ vg.name }}/{{ lv.app.name }}"
+    fstype: "{{ vg.fs_type }}"
+    state: mounted
+
+- name: LOG-mount the lv
+  mount:
+    path: "{{ lv.log.path }}"
+    src: "/dev/{{ vg.name }}/{{ lv.log.name }}"
+    fstype: '{{ vg.fs_type }}"
+    state: mounted

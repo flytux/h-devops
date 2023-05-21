@@ -1,0 +1,35 @@
+image:
+  repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/sonarqube
+  pullSecrets:
+    - name: hero-reg
+
+initContainers:
+  image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/busybox:1.34.1
+
+initSysctl:
+  image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/busybox:1.34.1
+
+initFs:
+  image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/busybox:1.34.1
+
+ingress:
+  enabled: true
+  hosts:
+    - name: sonarqube.herosonsa.co.kr
+  tls:
+    - secretName: hro-tls-secret
+      hosts:
+        - sonarqube.herosonsa.co.kr
+
+persistence:
+  enabled: true
+
+tests:
+  enabled: false
+
+postgresql:
+  enabled: true
+  global:
+    imageRegistry: 'tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops'
+    imagePullSecrets: 
+      - hero-reg

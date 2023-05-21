@@ -1,0 +1,31 @@
+image:
+  repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/mattermost-team-edition
+  tag: 7.9.1
+
+imagePullSecrets:
+  - name: hero-reg
+
+initContainerImage:
+  repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/appropriate/curl
+  tag: latest
+
+ingress:
+  enabled: true
+  annotations: 
+    kubernetes.io/ingress.class: nginx
+  hosts:
+    - mattermost.herosonsa.co.kr
+  tls:
+    - secretName: hro-tls-secret
+      hosts:
+        - mattermost.herosonsa.co.kr
+
+mysql:
+  enabled: true
+  mysqlRootPassword: ""
+  mysqlUser: "mattermost"
+  mysqlPassword: "mattermost"
+  mysqlDatabase: mattermost
+  
+  image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/mattermost/mysql
+  imageTag: '8.0.18'

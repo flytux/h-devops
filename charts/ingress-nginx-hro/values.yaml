@@ -1,0 +1,13 @@
+controller:
+  image:
+    registry: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/k8s.gcr.io
+    image: ingress-nginx/controller
+
+    patch:
+      enabled: true
+      image:
+        registry: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/k8s.gcr.io
+        image: ingress-nginx/kube-webhook-certgen
+
+imagePullSecrets: 
+  - name: hero-reg

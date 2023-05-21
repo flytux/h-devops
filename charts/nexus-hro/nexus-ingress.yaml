@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nexus-ingress
+  namespace: nexus
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - nexus.herosonsa.co.kr
+    secretName: tls-nexus-ingress
+  rules:
+  - host: nexus.herosonsa.co.kr
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nexus-service
+            port:
+              number: 8081

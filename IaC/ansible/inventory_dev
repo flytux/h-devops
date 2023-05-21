@@ -1,0 +1,6 @@
+[hello_hro]
+221.168.37.144
+
+[hello_hro:vars]
+ansible_user=devops
+ansible_password=devops

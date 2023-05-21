@@ -1,0 +1,66 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: keycloak-backup
+  namespace: keycloak
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - args:
+                - /etc/backup/backup.sh
+              command:
+                - /bin/bash
+              image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/minio/mc:hero
+              imagePullPolicy: Always
+              name: keycloak-backup
+              volumeMounts:
+                - mountPath: /etc/backup
+                  name: vol-kmsgv
+          imagePullSecrets:
+            - name: hero-reg
+          volumes:
+            - configMap:
+                defaultMode: 420
+                name: keycloak-backup
+              name: vol-kmsgv
+  schedule: 0  */12 * * *
+  successfulJobsHistoryLimit: 3
+
+---
+apiVersion: v1
+data:
+  backup.sh: >-
+    #!/bin/bash
+
+    kubectl exec keycloak-0 -- /opt/bitnami/keycloak/bin/kc.sh export
+    --dir=/opt/bitnami/keycloak/backup/$(date +%Y-%m-%d-%H-%M-%S)
+
+    kubectl cp keycloak-0:/opt/bitnami/keycloak/backup /keycloak-backup
+
+    mc alias set hero-dev http://minio.minio:9000 backup backup123
+
+    mc cp --recursive /keycloak-backup/ hero-dev/keycloak-backup
+
+    kubectl exec keycloak-0 -- rm -rf /opt/bitnami/keycloak/backup
+kind: ConfigMap
+metadata:
+  name: keycloak-backup
+  namespace: keycloak
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: keycloak-backup
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: keycloak

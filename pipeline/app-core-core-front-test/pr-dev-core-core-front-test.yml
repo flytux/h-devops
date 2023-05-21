@@ -1,0 +1,46 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: dev-app-core-core-front-test-pipeline-
+spec:
+  serviceAccountName: sa-pipeline-runner
+  pipelineRef:
+      name: app-core-core-front-test
+  podTemplate:
+    imagePullSecrets:
+      - name: hero-reg
+  params:
+  - name: git-url
+    value: "https://gitlab.herosonsa.co.kr/app/core/core-front-test.git"
+  - name: git-revision
+    value: "dev"
+  - name: insecure-registry
+    value: "false"
+  - name: image-url
+    value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/core/core-front-test"
+  - name: argo-app-name
+    value: "dev-app-core-core-front-test"
+  - name: gitops-url
+    value: "https://hello-3031818.devtools.fin-ncloud.com/3031818/app-core-core-front-test.git"
+  - name: gitops-revision
+    value: "dev"
+  - name: deploy-manifest
+    value: "kustomization.yaml"
+  - name: argo-url
+    value: "argocd.herosonsa.co.kr"
+  - name: build-stage
+    value: "dev"
+  - name: sonar-project-key
+    value: "dev-app-core-core-front-test"
+  - name: rollout-strategy
+    value: "rolling"
+  - name: pipeline-name
+    value: $(context.pipelineRun.name)
+  workspaces:
+  - name: source
+    persistentvolumeclaim:
+      claimName: pvc-hero-dev-build
+  - name: gitops
+    emptyDir: {}
+  - name: manifest-dir
+    emptyDir: {}

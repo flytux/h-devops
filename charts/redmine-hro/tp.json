@@ -1,0 +1,85 @@
+{
+    "apiVersion": "v1",
+    "kind": "Namespace",
+    "metadata": {
+        "annotations": {
+            "cattle.io/status": "{\"Conditions\":[{\"Type\":\"ResourceQuotaInit\",\"Status\":\"True\",\"Message\":\"\",\"LastUpdateTime\":\"2023-03-29T11:25:00Z\"},{\"Type\":\"InitialRolesPopulated\",\"Status\":\"True\",\"Message\":\"\",\"LastUpdateTime\":\"2023-03-29T11:25:00Z\"},{\"Type\":\"ResourceQuotaValidated\",\"Status\":\"True\",\"Message\":\"\",\"LastUpdateTime\":\"2023-04-01T03:22:36Z\"}]}",
+            "field.cattle.io/projectId": "local:p-sv2cl",
+            "field.cattle.io/resourceQuota": "{\"limit\":{}}",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Namespace\",\"metadata\":{\"annotations\":{\"operator.tekton.dev/last-applied-hash\":\"5491447204859fded638f73cbfdee37071e46b71c79e6c5fe5455f4cab766ce5\"},\"labels\":{\"app.kubernetes.io/component\":\"resolvers\",\"app.kubernetes.io/instance\":\"default\",\"app.kubernetes.io/part-of\":\"tekton-pipelines\",\"operator.tekton.dev/disable-proxy\":\"true\",\"operator.tekton.dev/operand-name\":\"tektoncd-pipelines\",\"pod-security.kubernetes.io/enforce\":\"restricted\"},\"name\":\"tekton-pipelines\",\"ownerReferences\":[{\"apiVersion\":\"operator.tekton.dev/v1alpha1\",\"blockOwnerDeletion\":true,\"controller\":true,\"kind\":\"TektonPipeline\",\"name\":\"pipeline\",\"uid\":\"632354fb-d0bb-482e-ac86-0948a5d32840\"}]}}\n",
+            "lifecycle.cattle.io/create.namespace-auth": "true",
+            "operator.tekton.dev/last-applied-hash": "5491447204859fded638f73cbfdee37071e46b71c79e6c5fe5455f4cab766ce5",
+            "operator.tekton.dev/prune.hash": "0fc62628041a1160f11c42171b9d8a966d710a17885bf3bff6c405ad9d370f94"
+        },
+        "creationTimestamp": "2023-03-29T11:24:59Z",
+        "deletionTimestamp": "2023-04-24T08:52:54Z",
+        "labels": {
+            "app.kubernetes.io/component": "resolvers",
+            "app.kubernetes.io/instance": "default",
+            "app.kubernetes.io/part-of": "tekton-pipelines",
+            "field.cattle.io/projectId": "p-sv2cl",
+            "kubernetes.io/metadata.name": "tekton-pipelines",
+            "operator.tekton.dev/disable-proxy": "true",
+            "operator.tekton.dev/operand-name": "tektoncd-pipelines",
+            "operator.tekton.dev/targetNamespace": "true",
+            "pod-security.kubernetes.io/enforce": "restricted"
+        },
+        "name": "tekton-pipelines",
+        "ownerReferences": [
+            {
+                "apiVersion": "operator.tekton.dev/v1alpha1",
+                "blockOwnerDeletion": true,
+                "controller": true,
+                "kind": "TektonPipeline",
+                "name": "pipeline",
+                "uid": "632354fb-d0bb-482e-ac86-0948a5d32840"
+            }
+        ],
+        "resourceVersion": "33441389",
+        "uid": "83b1cfdd-9a1c-4727-bfc6-add019f74eb8"
+    },
+    "spec": {
+        "finalizers": [
+        ]
+    },
+    "status": {
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-04-24T08:53:00Z",
+                "message": "Discovery failed for some groups, 1 failing: unable to retrieve the complete list of server APIs: packages.operators.coreos.com/v1: the server is currently unable to handle the request",
+                "reason": "DiscoveryFailed",
+                "status": "True",
+                "type": "NamespaceDeletionDiscoveryFailure"
+            },
+            {
+                "lastTransitionTime": "2023-04-24T08:53:05Z",
+                "message": "All legacy kube types successfully parsed",
+                "reason": "ParsedGroupVersions",
+                "status": "False",
+                "type": "NamespaceDeletionGroupVersionParsingFailure"
+            },
+            {
+                "lastTransitionTime": "2023-04-24T08:53:58Z",
+                "message": "All content successfully deleted, may be waiting on finalization",
+                "reason": "ContentDeleted",
+                "status": "False",
+                "type": "NamespaceDeletionContentFailure"
+            },
+            {
+                "lastTransitionTime": "2023-04-24T08:53:58Z",
+                "message": "All content successfully removed",
+                "reason": "ContentRemoved",
+                "status": "False",
+                "type": "NamespaceContentRemaining"
+            },
+            {
+                "lastTransitionTime": "2023-04-24T08:53:58Z",
+                "message": "All content-preserving finalizers finished",
+                "reason": "ContentHasNoFinalizers",
+                "status": "False",
+                "type": "NamespaceFinalizersRemaining"
+            }
+        ],
+        "phase": "Terminating"
+    }
+}

@@ -1,0 +1,86 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: dev-app-core-core-front-test-listener
+spec:
+  serviceAccountName: sa-pipeline-trigger
+  triggers:
+    - name: build-trigger
+      interceptors:
+        - name: "CEL filter: dev branch only"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.ref in ['refs/heads/dev']"
+      bindings:
+        - ref: dev-app-core-core-front-test-binding
+      template:
+        ref: dev-app-core-core-front-test-template
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: dev-app-core-core-front-test-binding
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.after)
+    - name: gitrepositoryurl
+      value: $(body.project.http_url)
+    - name: gitusername
+      value: $(body.user_username)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: dev-app-core-core-front-test-template
+spec:
+  params:
+    - name: gitrevision
+      description: The git revision
+    - name: gitrepositoryurl
+      description: The git repository url
+    - name: gitusername
+      description: The git username
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: dev-app-core-core-front-test-vm-pipeline-
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-core-core-front-test-vm
+        podTemplate:
+          imagePullSecrets:
+            - name: hero-reg
+        params:
+        - name: build-stage
+          value: "dev"
+        - name: git-url
+          value: $(tt.params.gitrepositoryurl)
+        - name: git-revision
+          value: $(tt.params.gitrevision)
+        - name: git-username
+          value: $(tt.params.gitusername)
+        - name: clone-to-directory
+          value: "dev/$(tt.params.gitusername)"
+        - name: image-url
+          value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/core/core-front-test"
+        - name: remote-ip
+          value: "10.3.20.12"
+        - name: sonar-project-key
+          value: "dev-app-core-core-front-test"
+        - name: pipeline-name
+          value: $(context.pipelineRun.name)
+        workspaces:
+        - name: source
+          persistentvolumeclaim:
+            claimName: pvc-hero-dev-build
+        - name: credentials
+          secret:
+            secretName: hro-vm-auth
+        - name: manifest-dir
+          emptyDir: {}
+

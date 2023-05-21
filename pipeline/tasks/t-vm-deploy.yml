@@ -1,0 +1,49 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: vm-deploy
+spec:
+  description: >-
+        This task can be used to run image in VM.
+  workspaces:
+    - name: credentials
+  params:
+    - name: remote-ip
+      type: string
+    - name: remote-username
+      default: "hroadm"
+    - name: remote-port
+      default: "22"
+    - name: use-insecure-cipher
+      default: "false"
+    - name: image
+    - name: container-name
+  steps:
+    - name: remote-ssh-command
+      image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/appleboy/drone-ssh:1.6.1
+      workingDir: $(workspaces.credentials.path)
+      script: |
+          #!/bin/sh
+          set -e
+
+          export prepare="
+          #!/bin/sh
+          podman rm -f $(params.container-name)
+          podman login tbd5d1uh.private-ncr.fin-ntruss.com --username=$(cat ./registry-id) --password=$(cat ./registry-password)"
+
+          export run="
+          podman run -d -p 8080:8080 -it --name $(params.container-name) $(params.image)
+          podman image prune -a -f"
+          
+          cmd=""
+          [[ -f ./privatekey ]] && cmd="$cmd -i ./privatekey"
+          [[ -f ./remote-password ]] && cmd="$cmd -P $(cat ./remote-password)"
+          [[ -f ./passphrase ]] && cmd="$cmd --ssh-passphrase $(cat ./passphrase)"
+          [[ -f ./fingerprint ]] && cmd="$cmd --fingerprint $(cat ./fingerprint)"
+          [[ -f ./ciphers ]] && cmd="$cmd --ciphers $(cat ./ciphers)"
+          [[ $(params.use-insecure-cipher) == "true" ]] && cmd="$cmd --useInsecureCipher true"
+                    
+          drone-ssh -H $(params.remote-ip) -p $(params.remote-port) -u $(params.remote-username) -s "$prepare" $cmd 1>/dev/null
+          drone-ssh -H $(params.remote-ip) -p $(params.remote-port) -u $(params.remote-username) -s "$run" $cmd 
+

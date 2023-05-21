@@ -1,0 +1,9 @@
+hostname: rancher.herosonsa.co.kr
+
+imagePullSecrets: [
+  - name: hero-reg
+
+rancherImage: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/cattle-system/rancher/rancher 
+rancherImageTag: v2.7.1
+
+bootstrapPassword: "admin"

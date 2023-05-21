@@ -1,0 +1,64 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: channel-mobile-api-dev
+  # You'll usually want to add your resources to the argocd namespace.
+  namespace: argo-system
+spec:
+  # The project the application belongs to.
+  project: hro-apps
+
+  # Source of the application manifests
+  source:
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git  # Can point to either a Helm chart repo or a git repo.
+    targetRevision: dev  # For Helm, this refers to the chart version.
+    path: app/channel/hro-mobile-backend/dev  # This has no meaning for Helm charts pulled directly from a Helm repo instead of git.
+  destination:
+    name: dev-cluster
+    namespace: ns-app-channel-dev
+  syncPolicy:
+    automated: {}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: channel-prmadm-api-dev
+  # You'll usually want to add your resources to the argocd namespace.
+  namespace: argo-system
+spec:
+  # The project the application belongs to.
+  project: hro-apps
+
+  # Source of the application manifests
+  source:
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git  # Can point to either a Helm chart repo or a git repo.
+    targetRevision: dev  # For Helm, this refers to the chart version.
+    path: app/channel/hro-prmadm-backend/dev  # This has no meaning for Helm charts pulled directly from a Helm repo instead of git.
+  destination:
+    name: dev-cluster
+    namespace: ns-app-channel-dev
+  syncPolicy:
+    automated: {}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: channel-prm-api-dev
+  # You'll usually want to add your resources to the argocd namespace.
+  namespace: argo-system
+spec:
+  # The project the application belongs to.
+  project: hro-apps
+
+  # Source of the application manifests
+  source:
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git  # Can point to either a Helm chart repo or a git repo.
+    targetRevision: dev  # For Helm, this refers to the chart version.
+    path: app/channel/hro-prm-backend/dev  # This has no meaning for Helm charts pulled directly from a Helm repo instead of git.
+  destination:
+    name: dev-cluster
+    namespace: ns-app-channel-dev
+  syncPolicy:
+    automated: {}
+---
+

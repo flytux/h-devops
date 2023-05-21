@@ -1,0 +1,51 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: test-app-core-hro-test-approval-pipeline-
+spec:
+  serviceAccountName: sa-pipeline-runner
+  pipelineRef:
+          name: app-core-hro-test-approval
+  podTemplate:
+    imagePullSecrets:
+      - name: hero-reg
+  params:
+  - name: build-stage
+    value: "test"
+  - name: git-url
+    value: "https://gitlab.herosonsa.co.kr/app/core/hro-test.git"
+  - name: git-revision
+    value: "test"
+  - name: git-username
+    value: "tekton-dashboard"
+  - name: clone-to-directory
+    value: $(context.pipelineRun.name)
+  - name: image-url
+    value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/core/hro-test"
+  #- name: argo-app-name
+  #  value: "dev-app-core-hro-test"
+  - name: gitops-url
+    value: "https://hello-3031818.devtools.fin-ncloud.com/3031818/app-core-hro-test.git"
+  - name: gitops-revision
+    value: "test"
+  - name: gitops-path
+    value: "test"
+  - name: rollout-strategy
+    value: "rolling"
+  - name: deploy-manifest
+    value: "kustomization.yaml"
+  #- name: argo-url
+  #  value: "argocd.herosonsa.co.kr"
+  #- name: sonar-project-key
+  #  value: "dev-app-core-hro-test"
+  - name: pipeline-name
+    value: $(context.pipelineRun.name)
+  workspaces:
+  - name: source
+    persistentvolumeclaim:
+      claimName: pvc-app-core-hro-com-backend
+  - name: gitops
+    emptyDir: {}
+
+
+

@@ -1,0 +1,99 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: dev-app-core-hro-sts-backend-listener
+spec:
+  serviceAccountName: sa-pipeline-trigger
+  triggers:
+    - name: build-trigger
+      interceptors:
+        - name: "CEL filter: dev branch only"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.ref in ['refs/heads/dev']"
+      bindings:
+        - ref: dev-app-core-hro-sts-backend-binding
+      template:
+        ref: dev-app-core-hro-sts-backend-template
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: dev-app-core-hro-sts-backend-binding
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.after)
+    - name: gitrepositoryurl
+      value: $(body.project.http_url)
+    - name: gitusername
+      value: $(body.user_username)
+    - name: project-name
+      value: $(body.project.name)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: dev-app-core-hro-sts-backend-template
+spec:
+  params:
+    - name: gitrevision
+      description: The git revision
+    - name: gitrepositoryurl
+      description: The git repository url
+    - name: gitusername
+      description: The git username
+    - name: project-name
+      description: The project name
+  resourcetemplates:     
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: dev-app-core-hro-sts-backend-pipeline-
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-core-hro-sts-backend
+        params:
+        - name: build-stage
+          value: "dev"
+        - name: git-url
+          value: $(tt.params.gitrepositoryurl)
+        - name: git-revision
+          value: $(tt.params.gitrevision)
+        - name: git-username
+          value: $(tt.params.gitusername)
+        - name: clone-to-directory
+          value: $(tt.params.gitrevision)
+        - name: image-url
+          value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/core/$(tt.params.project-name)"
+#        - name: argo-app-name
+#          value: "core-sts-api-dev"
+        - name: gitops-url
+          value: "https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git"
+        - name: gitops-revision
+          value: "dev"
+        - name: gitops-path
+          value: "app/core/$(tt.params.project-name)/dev"
+        - name: rollout-strategy
+          value: "rolling"
+        - name: deploy-manifest
+          value: "kustomization.yaml"
+#        - name: argo-url
+#          value: "argocd.herosonsa.co.kr"
+        - name: sonar-project-key
+          value: "core-sts-api-dev"
+        - name: pipeline-name
+          value: $(context.pipelineRun.name)
+        - name: mm-channel
+          value: "core:$(tt.params.project-name)"
+        workspaces:
+        - name: source
+          persistentvolumeclaim:
+            claimName: pvc-app-core-$(tt.params.project-name)
+        - name: gitops
+          emptyDir: {}
+        - name: manifest-dir
+          emptyDir: {}

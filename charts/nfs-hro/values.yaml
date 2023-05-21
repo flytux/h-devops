@@ -1,0 +1,15 @@
+image:
+  repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/k8s.gcr.io/sig-storage/nfs-subdir-external-provisioner
+  tag: v4.0.2
+  pullPolicy: IfNotPresent
+imagePullSecrets:
+  - name: hero-reg
+
+nfs:
+  server: 169.254.0.20
+  path: /n3031818_nkshrod
+  mountOptions:
+  volumeName: nfs-subdir-external-provisioner-root
+  # Reclaim policy for the main nfs volume
+  reclaimPolicy: Retain
+

@@ -1,0 +1,56 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: test-app-channel-hro-mobile-backend-pipeline-
+spec:
+  serviceAccountName: sa-pipeline-runner
+  pipelineRef:
+          name: app-channel-hro-mobile-backend-approval
+          #  podTemplate:
+          #    imagePullSecrets:
+          #      - name: hero-reg
+  params:
+  - name: build-stage
+    value: "test"
+  - name: git-url
+    value: "https://gitlab.herosonsa.co.kr/app/channel/hro-mobile-backend.git"
+  - name: git-revision
+    value: "test"
+  - name: git-username
+    value: "tekton-dashboard"
+  - name: clone-to-directory
+    value: $(context.pipelineRun.name)
+  - name: image-url
+    value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/channel/hro-mobile-backend"
+#  - name: argo-app-name
+#    value: ""
+  - name: gitops-url
+    value: "https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git"
+  - name: gitops-revision
+    value: "test"
+  - name: gitops-path
+    value: "app/channel/hro-mobile-backend/test"
+  - name: rollout-strategy
+    value: "rolling"
+  - name: deploy-manifest
+    value: "kustomization.yaml"
+#  - name: argo-url
+#    value: "argocd.herosonsa.co.kr"
+  - name: sonar-project-key
+    value: "channel-mobile-api-test"
+  - name: pipeline-name
+    value: $(context.pipelineRun.name)
+  - name: mm-channel
+    #value: "hro-build:devops-sample"
+    value: "chl:hro-mobile-backend"
+  workspaces:
+  - name: source
+    persistentvolumeclaim:
+      claimName: pvc-app-channel-hro-mobile-backend
+  - name: gitops
+    emptyDir: {}
+  - name: manifest-dir
+    emptyDir: {}
+
+
+

@@ -1,0 +1,5 @@
+global:
+  imageRegistry: "tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops"
+  imagePullSecrets: 
+    - name: hero-reg
+

@@ -1,0 +1,52 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: app-core-hro-test-deploy
+spec:
+  params:
+    - name: argo-url
+    - name: argo-app-name
+    - name: gitops-revision
+    - name: gitops-url
+    - name: deploy-manifest
+    - name: gitops-path
+    - name: rollout-strategy
+    - name: pipeline-name
+  workspaces:
+    - name: gitops 
+  tasks:
+    - name: notify-pipeline-start
+      taskRef:
+        name: mm-notify-start
+      params:
+        - name: pipeline-name
+          value: $(params.pipeline-name)
+    - name: deploy
+      taskRef:
+        name: deploy
+      params:
+        - name: argo-url
+          value: $(params.argo-url) 
+        - name: argo-app-name
+          value: $(params.argo-app-name)
+        - name: gitops-revision
+          value: $(params.gitops-revision)
+        - name: deploy-manifest
+          value: $(params.deploy-manifest)
+        - name: gitops-path
+          value: $(params.gitops-path)
+        - name: gitops-url
+          value: $(params.gitops-url)
+        - name: rollout-strategy
+          value: $(params.rollout-strategy)
+      workspaces:
+        - name: gitops
+          workspace: gitops
+  finally:
+    - name: report-result
+      taskRef:
+        #name: print-result
+        name: mm-send-result
+      params:
+        - name: pipeline-name
+          value: $(params.pipeline-name)

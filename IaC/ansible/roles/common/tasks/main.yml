@@ -1,0 +1,25 @@
+---
+- name: Set timezone to Asia/Seoul
+  community.general.timezone:
+    name: Asia/Seoul
+
+# https://docs.ansible.com/ansible/latest/collections/ansible/builtin/yum_module.html
+#- name: Upgrade all packages
+#  ansible.builtin.yum:
+#    name: '*'
+#    state: latest
+
+- name: Install yum package
+  ansible.builtin.yum:
+    name:
+      - jq
+      - openssl
+      - openssl-devel
+      - pcre
+      - pcre-devel
+#- name: Prints two lines of messages, but only if there is an environment value set
+#  ansible.builtin.debug:
+#    msg:
+#      - "{{ ansible.common.msg.init }}"
+#      - "{{ ansible.common.msg.finish }}"
+
