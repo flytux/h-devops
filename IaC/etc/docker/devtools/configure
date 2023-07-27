@@ -1,0 +1,4 @@
+[DEFAULT]
+ncloud_access_key_id = B8706A69B7E41CE978AB
+ncloud_secret_access_key = 7C48BD41C67993AD8B693A6B335EFB6E27921AA4
+ncloud_api_url = https://ncloud.apigw.ntruss.com

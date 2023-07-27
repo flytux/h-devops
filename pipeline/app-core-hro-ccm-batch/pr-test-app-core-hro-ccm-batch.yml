@@ -2,6 +2,9 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   generateName: test-app-core-hro-ccm-batch-pipeline-
+  labels:
+    app: devops
+    build-stage: test
 spec:
   serviceAccountName: sa-pipeline-runner
   pipelineRef:
@@ -18,9 +21,11 @@ spec:
   - name: clone-to-directory
     value: $(context.pipelineRun.name)
   - name: image-url
-    value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/core/hro-ccm-batch"
+    value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/test/core/hro-ccm-batch"
 #  - name: argo-app-name
 #    value: "core-ccm-batch-dev"
+  - name: spring-profile
+    value: "test"
   - name: gitops-url
     value: "https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git"
   - name: gitops-revision

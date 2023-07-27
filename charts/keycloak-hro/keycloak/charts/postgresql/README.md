@@ -11,8 +11,7 @@ Trademarks: This software listing is packaged by Bitnami. The respective tradema
 ## TL;DR
 
 ```console
-helm repo add my-repo https://charts.bitnami.com/bitnami
-helm install my-release my-repo/postgresql
+helm install my-release oci://registry-1.docker.io/bitnamicharts/postgresql
 ```
 
 ## Introduction
@@ -34,8 +33,7 @@ Bitnami charts can be used with [Kubeapps](https://kubeapps.dev/) for deployment
 To install the chart with the release name `my-release`:
 
 ```console
-helm repo add my-repo https://charts.bitnami.com/bitnami
-helm install my-release my-repo/postgresql
+helm install my-release oci://registry-1.docker.io/bitnamicharts/postgresql
 ```
 
 The command deploys PostgreSQL on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
@@ -100,18 +98,18 @@ kubectl delete pvc -l release=my-release
 | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `image.registry`                         | PostgreSQL image registry                                                                                                                                                                                                                                                                                                                     | `docker.io`                |
 | `image.repository`                       | PostgreSQL image repository                                                                                                                                                                                                                                                                                                                   | `bitnami/postgresql`       |
-| `image.tag`                              | PostgreSQL image tag (immutable tags are recommended)                                                                                                                                                                                                                                                                                         | `15.2.0-debian-11-r2`      |
+| `image.tag`                              | PostgreSQL image tag (immutable tags are recommended)                                                                                                                                                                                                                                                                                         | `15.3.0-debian-11-r7`      |
 | `image.digest`                           | PostgreSQL image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag                                                                                                                                                                                                                                    | `""`                       |
 | `image.pullPolicy`                       | PostgreSQL image pull policy                                                                                                                                                                                                                                                                                                                  | `IfNotPresent`             |
 | `image.pullSecrets`                      | Specify image pull secrets                                                                                                                                                                                                                                                                                                                    | `[]`                       |
 | `image.debug`                            | Specify if debug values should be set                                                                                                                                                                                                                                                                                                         | `false`                    |
 | `auth.enablePostgresUser`                | Assign a password to the "postgres" admin user. Otherwise, remote access will be blocked for this user                                                                                                                                                                                                                                        | `true`                     |
-| `auth.postgresPassword`                  | Password for the "postgres" admin user. Ignored if `auth.existingSecret` with key `postgres-password` is provided                                                                                                                                                                                                                             | `""`                       |
+| `auth.postgresPassword`                  | Password for the "postgres" admin user. Ignored if `auth.existingSecret` is provided                                                                                                                                                                                                                                                          | `""`                       |
 | `auth.username`                          | Name for a custom user to create                                                                                                                                                                                                                                                                                                              | `""`                       |
-| `auth.password`                          | Password for the custom user to create. Ignored if `auth.existingSecret` with key `password` is provided                                                                                                                                                                                                                                      | `""`                       |
+| `auth.password`                          | Password for the custom user to create. Ignored if `auth.existingSecret` is provided                                                                                                                                                                                                                                                          | `""`                       |
 | `auth.database`                          | Name for a custom database to create                                                                                                                                                                                                                                                                                                          | `""`                       |
 | `auth.replicationUsername`               | Name of the replication user                                                                                                                                                                                                                                                                                                                  | `repl_user`                |
-| `auth.replicationPassword`               | Password for the replication user. Ignored if `auth.existingSecret` with key `replication-password` is provided                                                                                                                                                                                                                               | `""`                       |
+| `auth.replicationPassword`               | Password for the replication user. Ignored if `auth.existingSecret` is provided                                                                                                                                                                                                                                                               | `""`                       |
 | `auth.existingSecret`                    | Name of existing secret to use for PostgreSQL credentials. `auth.postgresPassword`, `auth.password`, and `auth.replicationPassword` will be ignored and picked up from this secret. The secret might also contains the key `ldap-password` if LDAP is enabled. `ldap.bind_password` will be ignored and picked from this secret in this case. | `""`                       |
 | `auth.secretKeys.adminPasswordKey`       | Name of key in existing secret to use for PostgreSQL credentials. Only used when `auth.existingSecret` is set.                                                                                                                                                                                                                                | `postgres-password`        |
 | `auth.secretKeys.userPasswordKey`        | Name of key in existing secret to use for PostgreSQL credentials. Only used when `auth.existingSecret` is set.                                                                                                                                                                                                                                | `password`                 |
@@ -362,13 +360,13 @@ kubectl delete pvc -l release=my-release
 | `networkPolicy.ingressRules.primaryAccessOnlyFrom.enabled`                | Enable ingress rule that makes PostgreSQL primary node only accessible from a particular origin.                                                   | `false` |
 | `networkPolicy.ingressRules.primaryAccessOnlyFrom.namespaceSelector`      | Namespace selector label that is allowed to access the PostgreSQL primary node. This label will be used to identified the allowed namespace(s).    | `{}`    |
 | `networkPolicy.ingressRules.primaryAccessOnlyFrom.podSelector`            | Pods selector label that is allowed to access the PostgreSQL primary node. This label will be used to identified the allowed pod(s).               | `{}`    |
-| `networkPolicy.ingressRules.primaryAccessOnlyFrom.customRules`            | Custom network policy for the PostgreSQL primary node.                                                                                             | `{}`    |
+| `networkPolicy.ingressRules.primaryAccessOnlyFrom.customRules`            | Custom network policy for the PostgreSQL primary node.                                                                                             | `[]`    |
 | `networkPolicy.ingressRules.readReplicasAccessOnlyFrom.enabled`           | Enable ingress rule that makes PostgreSQL read-only nodes only accessible from a particular origin.                                                | `false` |
 | `networkPolicy.ingressRules.readReplicasAccessOnlyFrom.namespaceSelector` | Namespace selector label that is allowed to access the PostgreSQL read-only nodes. This label will be used to identified the allowed namespace(s). | `{}`    |
 | `networkPolicy.ingressRules.readReplicasAccessOnlyFrom.podSelector`       | Pods selector label that is allowed to access the PostgreSQL read-only nodes. This label will be used to identified the allowed pod(s).            | `{}`    |
-| `networkPolicy.ingressRules.readReplicasAccessOnlyFrom.customRules`       | Custom network policy for the PostgreSQL read-only nodes.                                                                                          | `{}`    |
+| `networkPolicy.ingressRules.readReplicasAccessOnlyFrom.customRules`       | Custom network policy for the PostgreSQL read-only nodes.                                                                                          | `[]`    |
 | `networkPolicy.egressRules.denyConnectionsToExternal`                     | Enable egress rule that denies outgoing traffic outside the cluster, except for DNS (port 53).                                                     | `false` |
-| `networkPolicy.egressRules.customRules`                                   | Custom network policy rule                                                                                                                         | `{}`    |
+| `networkPolicy.egressRules.customRules`                                   | Custom network policy rule                                                                                                                         | `[]`    |
 
 ### Volume Permissions parameters
 
@@ -377,7 +375,7 @@ kubectl delete pvc -l release=my-release
 | `volumePermissions.enabled`                            | Enable init container that changes the owner and group of the persistent volume                                                   | `false`                 |
 | `volumePermissions.image.registry`                     | Init container volume-permissions image registry                                                                                  | `docker.io`             |
 | `volumePermissions.image.repository`                   | Init container volume-permissions image repository                                                                                | `bitnami/bitnami-shell` |
-| `volumePermissions.image.tag`                          | Init container volume-permissions image tag (immutable tags are recommended)                                                      | `11-debian-11-r86`      |
+| `volumePermissions.image.tag`                          | Init container volume-permissions image tag (immutable tags are recommended)                                                      | `11-debian-11-r120`     |
 | `volumePermissions.image.digest`                       | Init container volume-permissions image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag | `""`                    |
 | `volumePermissions.image.pullPolicy`                   | Init container volume-permissions image pull policy                                                                               | `IfNotPresent`          |
 | `volumePermissions.image.pullSecrets`                  | Init container volume-permissions image pull secrets                                                                              | `[]`                    |
@@ -405,7 +403,7 @@ kubectl delete pvc -l release=my-release
 | `metrics.enabled`                               | Start a prometheus exporter                                                                                | `false`                     |
 | `metrics.image.registry`                        | PostgreSQL Prometheus Exporter image registry                                                              | `docker.io`                 |
 | `metrics.image.repository`                      | PostgreSQL Prometheus Exporter image repository                                                            | `bitnami/postgres-exporter` |
-| `metrics.image.tag`                             | PostgreSQL Prometheus Exporter image tag (immutable tags are recommended)                                  | `0.11.1-debian-11-r60`      |
+| `metrics.image.tag`                             | PostgreSQL Prometheus Exporter image tag (immutable tags are recommended)                                  | `0.12.0-debian-11-r91`      |
 | `metrics.image.digest`                          | PostgreSQL image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag | `""`                        |
 | `metrics.image.pullPolicy`                      | PostgreSQL Prometheus Exporter image pull policy                                                           | `IfNotPresent`              |
 | `metrics.image.pullSecrets`                     | Specify image pull secrets                                                                                 | `[]`                        |
@@ -457,12 +455,12 @@ kubectl delete pvc -l release=my-release
 | `metrics.prometheusRule.labels`                 | Additional labels that can be used so PrometheusRule will be discovered by Prometheus                      | `{}`                        |
 | `metrics.prometheusRule.rules`                  | PrometheusRule definitions                                                                                 | `[]`                        |
 
-
+Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```console
 helm install my-release \
     --set auth.postgresPassword=secretpassword
-    my-repo/postgresql
+    oci://registry-1.docker.io/bitnamicharts/postgresql
 ```
 
 The above command sets the PostgreSQL `postgres` account password to `secretpassword`.
@@ -473,7 +471,7 @@ The above command sets the PostgreSQL `postgres` account password to `secretpass
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,
 
 ```console
-helm install my-release -f values.yaml my-repo/postgresql
+helm install my-release -f values.yaml oci://registry-1.docker.io/bitnamicharts/postgresql
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
@@ -670,7 +668,7 @@ Refer to the [chart documentation for more information about how to upgrade from
 
 ## License
 
-Copyright &copy; 2023 Bitnami
+Copyright &copy; 2023 VMware, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

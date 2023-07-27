@@ -1,0 +1,535 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: app-channel-hro-mobile-frontend-podman-listener
+spec:
+  serviceAccountName: sa-pipeline-trigger
+  triggers:
+    - name: dev-trigger
+      interceptors:
+        - name: "CEL filter: dev branch only"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.ref in ['refs/heads/dev']"
+      bindings:
+        - ref: dev-app-channel-hro-mobile-frontend-podman-binding
+      template:
+        ref: dev-app-channel-hro-mobile-frontend-podman-template
+    - name: test-trigger
+      interceptors:
+        - name: "CEL filter: merge to test branch"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_kind in ['merge_request']"
+        - name: "CEL filter: merge to test branch"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.source_branch in ['dev']"
+        - name: "CEL filter: merge to test branch"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.target_branch in ['test']"
+        - name: "CEL filter: merge to test branch"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.action in ['merge']"
+      bindings:
+        - ref: test-app-channel-hro-mobile-frontend-podman-binding
+      template:
+        ref: test-app-channel-hro-mobile-frontend-podman-template
+    - name: prd-build-trigger
+      interceptors:
+        - name: "CEL filter: merge to main branch"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_kind in ['merge_request']"
+        - name: "CEL filter: merge to main branch"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.source_branch in ['test']"
+        - name: "CEL filter: merge to main branch"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.target_branch in ['main']"
+        - name: "CEL filter: merge to main branch"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.action in ['merge']"
+      bindings:
+        - ref: prd-build-app-channel-hro-mobile-frontend-podman-binding
+      template:
+        ref: prd-build-app-channel-hro-mobile-frontend-podman-template
+    - name: prd-redmine-trigger
+      interceptors:
+        - name: "CEL filter: redmine tracker and status"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.payload.issue.tracker.name in ['배포 승인']"
+        - name: "CEL filter: redmine tracker and status"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.payload.issue.status.name in ['Deploy-Approved']"
+        - name: "CEL overlay: get image-url"
+          ref:
+            name: "cel"
+          params:
+          - name: "overlays"
+            value:
+            - key: "image-url"
+              expression: "body.payload.issue.description.split(' ')[1]"
+        - name: "CEL overlay: get build-id"
+          ref:
+            name: "cel"
+          params:
+          - name: "overlays"
+            value:
+            - key: "build-id"
+              expression: "body.payload.issue.description.split(' ')[2]"
+      bindings:
+        - ref: prd-redmine-app-channel-hro-mobile-frontend-podman-binding
+      template:
+        ref: prd-redmine-app-channel-hro-mobile-frontend-podman-template
+    - name: prd-mattermost-trigger
+      interceptors:
+        - name: "CEL filter: mattermost team and channel"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.team_domain in ['chl']"
+        - name: "CEL filter: mattermost team and channel"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.channel_name in ['hro-mobile-frontend']"
+        #- name: "CEL overlay: get image-url"
+        #  ref:
+        #    name: "cel"
+        #  params:
+        #  - name: "overlays"
+        #    value:
+        #    - key: "image-url"
+        #      expression: "body.text.split(' ')[1]"
+        - name: "CEL overlay: get build-id"
+          ref:
+            name: "cel"
+          params:
+          - name: "overlays"
+            value:
+            - key: "build-id"
+              expression: "body.text.split(' ')[1]"
+      bindings:
+        - ref: prd-mattermost-app-channel-hro-mobile-frontend-podman-binding
+      template:
+        ref: prd-mattermost-app-channel-hro-mobile-frontend-podman-template
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: dev-app-channel-hro-mobile-frontend-podman-binding
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.after)
+    - name: gitrepositoryurl
+      value: $(body.project.http_url)
+    - name: gitusername
+      value: $(body.user_username)
+    - name: project-name
+      value: $(body.project.name)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: dev-app-channel-hro-mobile-frontend-podman-template
+spec:
+  params:
+    - name: gitrevision
+      description: The git revision
+    - name: gitrepositoryurl
+      description: The git repository url
+    - name: gitusername
+      description: The git username
+    - name: project-name
+      description: The project name
+  resourcetemplates:     
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: dev-app-channel-hro-mobile-frontend-podman-pipeline-
+        labels:
+          app: devops
+          build-stage: dev
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-channel-hro-mobile-frontend-podman
+        params:
+        - name: build-stage
+          value: "dev"
+        - name: git-url
+          value: $(tt.params.gitrepositoryurl)
+        - name: git-revision
+          value: $(tt.params.gitrevision)
+        - name: git-username
+          value: $(tt.params.gitusername)
+        - name: clone-to-directory
+          value: "$(tt.params.gitrevision)"
+        - name: image-url
+          value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/dev/channel/$(tt.params.project-name)"
+        - name: remote-ip
+          value: "10.3.20.9"
+        - name: application-name
+          value: "channel-mobile-frontend-dev"
+        - name: service-port
+          value: "6411:6411"
+        - name: sonar-project-key
+          value: "channel-mobile-frontend-dev"
+        - name: pipelinerun-name
+          value: $(context.pipelineRun.name)
+        - name: mm-channel
+          value: "chl:$(tt.params.project-name)"
+        workspaces:
+        - name: source
+          persistentvolumeclaim:
+            claimName: pvc-app-channel-$(tt.params.project-name)
+        - name: credentials
+          secret:
+             secretName: hro-vm-auth
+        - name: manifest-dir
+          emptyDir: {}
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: test-app-channel-hro-mobile-frontend-podman-binding
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.object_attributes.merge_commit_sha)
+    - name: gitrepositoryurl
+      value: $(body.project.http_url)
+    - name: gitusername
+      value: $(body.user.username)
+    - name: project-name
+      value: $(body.project.name)
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: test-app-channel-hro-mobile-frontend-podman-template
+spec:
+  params:
+    - name: gitrevision
+      description: The git revision
+    - name: gitrepositoryurl
+      description: The git repository url
+    - name: gitusername
+      description: The git username
+    - name: project-name
+      description: The project name
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: test-app-channel-hro-mobile-frontend-podman-pipeline-
+        labels:
+          app: devops
+          build-stage: test
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-channel-hro-mobile-frontend-podman-approval
+        params:
+        - name: build-stage
+          value: "test"
+        - name: git-url
+          value: $(tt.params.gitrepositoryurl)
+        - name: git-revision
+          value: $(tt.params.gitrevision)
+        - name: git-username
+          value: $(tt.params.gitusername)
+        - name: clone-to-directory
+          value: "$(tt.params.gitrevision)"
+        - name: image-url
+          value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/test/channel/$(tt.params.project-name)"
+        - name: remote-ip
+          value: "10.3.10.6"
+        - name: application-name
+          value: "channel-mobile-frontend-test"
+        - name: service-port
+          value: "6411:6411"
+        - name: pipelinerun-name
+          value: $(context.pipelineRun.name)
+        - name: mm-channel
+          value: "chl:$(tt.params.project-name)"
+        workspaces:
+        - name: source
+          persistentvolumeclaim:
+            claimName: pvc-app-channel-$(tt.params.project-name)
+        - name: credentials
+          secret:
+             secretName: hro-vm-auth
+        - name: manifest-dir
+          emptyDir: {}
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: prd-build-app-channel-hro-mobile-frontend-podman-binding
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.object_attributes.merge_commit_sha)
+    - name: gitrepositoryurl
+      value: $(body.project.http_url)
+    - name: gitusername
+      value: $(body.user.username)
+    - name: project-name
+      value: $(body.project.name)
+    - name: commit-message
+      value: $(body.object_attributes.last_commit.message)
+    - name: merge-title
+      value: $(body.object_attributes.title)
+    - name: merge-description
+      value: $(body.object_attributes.description)
+    - name: merge-date
+      value: $(body.object_attributes.updated_at)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: prd-build-app-channel-hro-mobile-frontend-podman-template
+spec:
+  params:
+    - name: gitrevision
+      description: The git revision
+    - name: gitrepositoryurl
+      description: The git repository url
+    - name: gitusername
+      description: The git username
+    - name: project-name
+      description: The git project name
+    - name: commit-message
+      description: The last commit message
+    - name: merge-title
+    - name: merge-description
+    - name: merge-date
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: prd-build-app-channel-hro-mobile-frontend-podman-pipeline-
+        labels:
+          app: devops
+          build-stage: prd
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-channel-hro-mobile-frontend-podman-build
+        params:
+        - name: build-stage
+          value: "prd"
+        - name: git-url
+          value: $(tt.params.gitrepositoryurl)
+        - name: git-revision
+          value: $(tt.params.gitrevision)
+        - name: git-username
+          value: $(tt.params.gitusername)
+        - name: clone-to-directory
+          value: $(tt.params.gitrevision)
+        - name: image-url
+          value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/prd/channel/$(tt.params.project-name)"
+        - name: red-project-name
+          value: $(tt.params.project-name)
+        - name: application-name
+          value: "channel-mobile-frontend"
+        - name: last-commit-message
+          value: $(tt.params.commit-message)
+        - name: merge-title
+          value: $(tt.params.merge-title)
+        - name: merge-description
+          value: $(tt.params.merge-description)
+        - name: merge-date
+          value: $(tt.params.merge-date)
+        - name: pipelinerun-name
+          value: $(context.pipelineRun.name)
+        - name: pipeline-name
+          value: $(context.pipeline.name)
+        - name: mm-channel
+          value: "chl:$(tt.params.project-name)"
+        workspaces:
+        - name: source
+          persistentvolumeclaim:
+            claimName: pvc-app-channel-$(tt.params.project-name)
+        - name: manifest-dir
+          emptyDir: {}
+        - name: hro-redmine-config
+          secret:
+            secretName: hro-redmine-config
+        - name: hro-tekton-logs
+          persistentvolumeclaim:
+            claimName: pvc-hro-tekton-logs
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: prd-redmine-app-channel-hro-mobile-frontend-podman-binding
+spec:
+  params:
+    - name: image-url
+      value: $(extensions.image-url)
+    - name: build-id
+      value: $(extensions.build-id)
+    - name: red-username
+      value: $(body.payload.issue.author.login)
+    - name: red-project-name
+      value: $(body.payload.issue.project.name)
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: prd-redmine-app-channel-hro-mobile-frontend-podman-template
+spec:
+  params:
+    - name: image-url
+    - name: build-id
+    - name: red-username
+    - name: red-project-name
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: prd-redmine-app-channel-hro-mobile-frontend-podman-pipeline-
+        labels:
+          app: devops
+          build-stage: prd
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-channel-hro-mobile-frontend-podman-deploy
+        params:
+        - name: username
+          value: $(tt.params.red-username)
+        - name: image-url
+          value: $(tt.params.image-url)
+        - name: build-id
+          value: $(tt.params.build-id)
+        - name: remote-ip
+          value: "10.1.10.6"
+        - name: application-name
+          value: "channel-mobile-frontend-prd"
+        - name: service-port
+          value: "6411:6411"
+        - name: pipelinerun-name
+          value: $(context.pipelineRun.name)
+        - name: pipeline-name
+          value: $(context.pipeline.name)
+        - name: mm-channel
+          value: "chl:$(tt.params.red-project-name)"
+        workspaces:
+        - name: credentials
+          secret:
+            secretName: hro-vm-auth
+        - name: hro-tekton-logs
+          persistentvolumeclaim:
+            claimName: pvc-hro-tekton-logs
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: prd-mattermost-app-channel-hro-mobile-frontend-podman-binding
+spec:
+  params:
+    #- name: image-url
+    #  value: $(extensions.image-url)
+    - name: build-id
+      value: $(extensions.build-id)
+    - name: mattermost-username
+      value: $(body.user_name)
+    - name: mattermost-team
+      value: $(body.team_domain)
+    - name: mattermost-channel
+      value: $(body.channel_name)
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: prd-mattermost-app-channel-hro-mobile-frontend-podman-template
+spec:
+  params:
+    #- name: image-url
+    - name: build-id
+    - name: mattermost-username
+      description: The mattermost username
+    - name: mattermost-team
+      description: The mattermost team
+    - name: mattermost-channel
+      description: The mattermost channel
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: prd-mattermost-app-channel-hro-mobile-frontend-podman-pipeline-
+        labels:
+          app: devops
+          build-stage: prd
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-channel-hro-mobile-frontend-podman-deploy
+        params:
+        - name: username
+          value: $(tt.params.mattermost-username)
+        - name: image-url
+          value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/prd/channel/$(tt.params.mattermost-channel)"
+        - name: build-id
+          value: $(tt.params.build-id)
+        - name: remote-ip
+          value: "10.1.10.6"
+        - name: application-name
+          value: "channel-mobile-frontend-prd"
+        - name: service-port
+          value: "6411:6411"
+        - name: pipelinerun-name
+          value: $(context.pipelineRun.name)
+        - name: pipeline-name
+          value: $(context.pipeline.name)
+        - name: mm-channel
+          value: "$(tt.params.mattermost-team):$(tt.params.mattermost-channel)"
+        workspaces:
+        - name: credentials
+          secret:
+            secretName: hro-vm-auth
+        - name: hro-tekton-logs
+          persistentvolumeclaim:
+            claimName: pvc-hro-tekton-logs

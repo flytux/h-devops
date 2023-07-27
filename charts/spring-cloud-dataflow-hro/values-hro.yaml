@@ -1,0 +1,59 @@
+global:
+  imageRegistry: "tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops"
+  imagePullSecrets: ["hero-reg"]
+
+server:
+  image:
+    registry: "tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops"
+    repository: spring-cloud-dataflow
+    tag: 2.10.3-debian-11-r4
+    pullSecrets: ["hero-reg"]
+  existingConfigmap: scdf-server-cm
+
+  composedTaskRunner:
+    image:
+      registry: "tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops"
+      repository: spring-cloud-dataflow-composed-task-runner
+      tag: 2.10.3-debian-11-r1
+      pullSecrets: ["hero-reg"]
+
+skipper:
+  image:
+    registry: "tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops"
+    repository: spring-cloud-skipper
+    tag: 2.9.3-debian-11-r2
+    pullSecrets: ["hero-reg"]
+
+waitForBackends:
+  image:
+    registry: "tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops"
+    repository: kubectl
+    tag: 1.25.9-debian-11-r9
+    pullSecrets: ["hero-reg"]
+
+#jdbc:postgresql://pg-g4n4i.vpc-cdb-fkr.fin-ntruss.com:15432/dfrw?currentSchema=frw
+mariadb:
+  enabled: false
+externalDatabase:
+  host: "pg-g4n4i.vpc-cdb-fkr.fin-ntruss.com"
+  scheme: postgresql
+  port: 15432
+  driver: "org.postgresql.Driver"
+  existingPasswordSecret: scdf-datasource
+  existingPasswordKey: datasource-password
+  dataflow:
+    url: "jdbc:postgresql://pg-g4n4i.vpc-cdb-fkr.fin-ntruss.com:15432"
+    database: dfrw
+    username: adm_dfrw
+  skipper:
+    database: dfrw
+    username: adm_dfrw
+
+rabbitmq:
+  enabled: false
+externalRabbitmq:
+  enabled: true
+  host: rabbitmq-headless.rabbitmq.svc.cluster.local
+  port: 15672
+  username: hro-app-dev
+  existingPasswordSecret: scdf-rabbitmq

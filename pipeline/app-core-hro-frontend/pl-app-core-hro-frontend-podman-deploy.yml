@@ -1,0 +1,70 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  labels:
+    app: devops
+  name: app-core-hro-frontend-podman-deploy
+spec:
+  params:
+    - name: username
+    - name: image-url
+    - name: build-id
+    - name: remote-ip
+    - name: application-name
+    - name: service-port
+    - name: pipelinerun-name
+    - name: pipeline-name
+    - name: mm-channel
+  workspaces:
+    - name: credentials
+    - name: hro-tekton-logs
+  tasks:
+    - name: notify-pipeline-start
+      taskRef:
+        name: mm-notify-start
+      params:
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
+          value: $(params.username)
+        - name: CHANNEL_NAME
+          value: $(params.mm-channel)
+    - name: vm-deploy
+      taskRef:
+        name: vm-deploy
+      runAfter:
+        - notify-pipeline-start
+      params:
+        - name: remote-ip
+          value: $(params.remote-ip)
+        - name: image
+          value: $(params.image-url):$(params.build-id)
+        - name: container-name
+          value: $(params.application-name)
+        - name: service-port
+          value: $(params.service-port)
+      workspaces:
+        - name: credentials
+          workspace: credentials
+  finally:
+    - name: report-result
+      taskRef:
+        name: mm-send-result
+      params:
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
+          value: $(params.username)
+        - name: CHANNEL_NAME
+          value: $(params.mm-channel)
+    - name: save-pipelinerun-logs
+      taskRef:
+        name: tekton-logging
+      params:
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: pipeline-name
+          value: $(params.pipeline-name)
+      workspaces:
+        - name: hro-tekton-logs
+          workspace: hro-tekton-logs

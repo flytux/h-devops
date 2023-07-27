@@ -1,0 +1,55 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    velero.backup.period: weekly
+  name: backup-ns-weekly-mon-2300
+  namespace: velero
+spec:
+  concurrencyPolicy: Allow
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+      labels:
+        velero.backup.period: weekly
+    spec:
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+          - command:
+            - /bin/sh
+            - -c
+            - "\nfor target_ns in $(kubectl get ns -l velero.backup.period=weekly
+              -o name | cut -d \"/\" -f 2)\ndo\n  num_backup=$(velero backup get -l
+              ns=$target_ns | sed 1d | wc -l);\n  num_keep_backup=$(kubectl get ns
+              $target_ns -o \"jsonpath={.metadata.labels['velero\\.backup\\.keep']}\")\n
+              \ num_delete=$(( num_backup - num_keep_backup + 1 ))\n  \n  echo \"===\"
+              $target_ns \"keeps\" $num_keep_backup \", has \" $num_backup \" backups
+              ===\"\n  if [ $num_delete -ge 0 ]\n  then\n    for backup_name in $(velero
+              backup get -l ns=$target_ns | sed 1d | head -$num_delete | cut -d' '
+              -f 1)\n    do\n      echo \"Deleting old backup :\" $backup_name\n      velero
+              delete backup $backup_name --confirm\n    done\n  fi\n  echo \"=== Create
+              backup in \" $target_ns \"====\"\n  velero backup create $target_ns-$(date
+              +%F-%H%M%S) --include-namespaces=$target_ns --labels ns=$target_ns --labels
+              velero.backup.period=weekly\ndone\n"
+            image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/dev:v2
+            imagePullPolicy: Always
+            name: velero-backup
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+          dnsPolicy: ClusterFirst
+          imagePullSecrets:
+          - name: hero-reg
+          restartPolicy: Never
+          schedulerName: default-scheduler
+          securityContext: {}
+          serviceAccount: velero
+          serviceAccountName: velero
+          terminationGracePeriodSeconds: 30
+  schedule: 0 23 *  *  1
+  successfulJobsHistoryLimit: 1
+  suspend: false

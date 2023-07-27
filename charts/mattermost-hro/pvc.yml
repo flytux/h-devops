@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    meta.helm.sh/release-name: mattermost
+    meta.helm.sh/release-namespace: mattermost
+  labels:
+    app: mattermost-mysql
+    app.kubernetes.io/managed-by: Helm
+    chart: mysql-1.6.4
+    heritage: Helm
+    release: mattermost
+  name: mattermost-mysql
+  namespace: mattermost
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: nks-block-storage
+  volumeMode: Filesystem

@@ -2,10 +2,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: clean-workspace
-  labels:
-    app.kubernetes.io/version: "0.4"
   annotations:
-    tekton.dev/pipelines.minVersion: "0.21.0"
     tekton.dev/tags: git
     tekton.dev/displayName: "clean workspace"
 spec:
@@ -13,14 +10,14 @@ spec:
     This Task will clean git clone output Workspace.
   workspaces:
     - name: output
-      description: The workspace with git  cloned output
+      description: The workspace with git cloned output
   params:
     - name: subdirectory
       description: Subdirectory inside the `output` Workspace with cloned data
       type: string
   steps:
     - name: clean
-      image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.21.0
+      image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/alpine/git:v2.40.1
       script: |
         #!/usr/bin/env sh
         set -eu

@@ -2,6 +2,8 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: app-channel-hro-prm-backend
+  labels:
+    app: devops
 spec:
   params:
     - name: build-stage
@@ -11,6 +13,7 @@ spec:
     - name: clone-to-directory
     - name: image-url
 #    - name: argo-app-name
+    - name: spring-profile
     - name: gitops-url
 #    - name: argo-url
     - name: gitops-revision
@@ -18,7 +21,7 @@ spec:
     - name: deploy-manifest
     - name: sonar-project-key
     - name: rollout-strategy
-    - name: pipeline-name
+    - name: pipelinerun-name
     - name: mm-channel
   workspaces:
     - name: source 
@@ -29,9 +32,9 @@ spec:
       taskRef:
         name: mm-notify-start
       params:
-        - name: pipeline-name
-          value: $(params.pipeline-name)
-        - name: git-username
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
           value: $(params.git-username)
         - name: CHANNEL_NAME
           value: $(params.mm-channel)
@@ -79,8 +82,8 @@ spec:
           value: $(params.image-url):$(tasks.generate-id.results.build-id)
         - name: DIRECTORY
           value: $(params.clone-to-directory)
-        - name: build-stage
-          value: $(params.build-stage)
+        - name: spring-profile
+          value: $(params.spring-profile)
       workspaces:
         - name: source
           workspace: source
@@ -137,9 +140,9 @@ spec:
         #name: print-result
         name: mm-send-result
       params:
-        - name: pipeline-name
-          value: $(params.pipeline-name)
-        - name: git-username
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
           value: $(params.git-username)
         - name: CHANNEL_NAME
           value: $(params.mm-channel)

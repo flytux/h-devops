@@ -1,0 +1,148 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: core-com-api-prd
+  # You'll usually want to add your resources to the argocd namespace.
+  namespace: argo-system
+spec:
+  # The project the application belongs to.
+  project: hro-apps
+
+  # Source of the application manifests
+  source:
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git  # Can point to either a Helm chart repo or a git repo.
+    targetRevision: main  # For Helm, this refers to the chart version.
+    path: app/core/hro-com-backend/main  # This has no meaning for Helm charts pulled directly from a Helm repo instead of git.
+  destination:
+    name: prd-cluster
+    namespace: ns-app-core-prd
+  syncPolicy:
+    automated: {}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: core-com-batch-prd
+  # You'll usually want to add your resources to the argocd namespace.
+  namespace: argo-system
+spec:
+  # The project the application belongs to.
+  project: hro-apps
+
+  # Source of the application manifests
+  source:
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git  # Can point to either a Helm chart repo or a git repo.
+    targetRevision: main  # For Helm, this refers to the chart version.
+    path: app/core/hro-com-batch/main  # This has no meaning for Helm charts pulled directly from a Helm repo instead of git.
+  destination:
+    name: prd-cluster
+    namespace: ns-app-core-prd
+  syncPolicy:
+    automated: {}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: core-ccm-api-prd
+  # You'll usually want to add your resources to the argocd namespace.
+  namespace: argo-system
+spec:
+  # The project the application belongs to.
+  project: hro-apps
+
+  # Source of the application manifests
+  source:
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git  # Can point to either a Helm chart repo or a git repo.
+    targetRevision: main  # For Helm, this refers to the chart version.
+    path: app/core/hro-ccm-backend/main  # This has no meaning for Helm charts pulled directly from a Helm repo instead of git.
+  destination:
+    name: prd-cluster
+    namespace: ns-app-core-prd
+  syncPolicy:
+    automated: {}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: core-ccm-batch-prd
+  # You'll usually want to add your resources to the argocd namespace.
+  namespace: argo-system
+spec:
+  # The project the application belongs to.
+  project: hro-apps
+
+  # Source of the application manifests
+  source:
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git  # Can point to either a Helm chart repo or a git repo.
+    targetRevision: main  # For Helm, this refers to the chart version.
+    path: app/core/hro-ccm-batch/main  # This has no meaning for Helm charts pulled directly from a Helm repo instead of git.
+  destination:
+    name: prd-cluster
+    namespace: ns-app-core-prd
+  syncPolicy:
+    automated: {}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: core-smv-api-prd
+  # You'll usually want to add your resources to the argocd namespace.
+  namespace: argo-system
+spec:
+  # The project the application belongs to.
+  project: hro-apps
+
+  # Source of the application manifests
+  source:
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git  # Can point to either a Helm chart repo or a git repo.
+    targetRevision: main  # For Helm, this refers to the chart version.
+    path: app/core/hro-smv-backend/main  # This has no meaning for Helm charts pulled directly from a Helm repo instead of git.
+  destination:
+    name: prd-cluster
+    namespace: ns-app-core-prd
+  syncPolicy:
+    automated: {}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: core-sts-api-prd
+  # You'll usually want to add your resources to the argocd namespace.
+  namespace: argo-system
+spec:
+  # The project the application belongs to.
+  project: hro-apps
+
+  # Source of the application manifests
+  source:
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git  # Can point to either a Helm chart repo or a git repo.
+    targetRevision: main  # For Helm, this refers to the chart version.
+    path: app/core/hro-sts-backend/main  # This has no meaning for Helm charts pulled directly from a Helm repo instead of git.
+  destination:
+    name: prd-cluster
+    namespace: ns-app-core-prd
+  syncPolicy:
+    automated: {}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: core-com-ncrm-prd
+  # You'll usually want to add your resources to the argocd namespace.
+  namespace: argo-system
+spec:
+  # The project the application belongs to.
+  project: hro-apps
+
+  # Source of the application manifests
+  source:
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git  # Can point to either a Helm chart repo or a git repo.
+    targetRevision: dev  # For Helm, this refers to the chart version.
+    path: app/core/hro-com-ncrm/main  # This has no meaning for Helm charts pulled directly from a Helm repo instead of git.
+  destination:
+    name: prd-cluster
+    namespace: ns-app-core-prd
+  syncPolicy:
+    automated: {}
+---
+

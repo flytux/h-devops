@@ -1,0 +1,116 @@
+kubectl apply -f - <<EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  labels:
+    k8slens-edit-resource-version: v1alpha3
+  name: hro-virtual-dev
+  namespace: istio-system
+spec:
+  gateways:
+    - istio-system/hro-apps-gateway-dev
+  hosts:
+    - devbiz.herosonsa.co.kr
+    - devk8s.herosonsa.co.kr
+    - devbatch.herosonsa.co.kr
+    - devprmadm.herosonsa.co.kr
+    - devprm.herosonsa.co.kr
+    - devmob.herosonsa.co.kr
+  http:
+    - match:
+        - uri:
+            prefix: /ncrm
+      route:
+        - destination:
+            host: core-com-ncrm-svc-dev.ns-app-core-dev.svc.cluster.local
+            port:
+              number: 8070
+    - match:
+        - uri:
+            prefix: /com
+      route:
+        - destination:
+            host: core-com-api-svc-dev.ns-app-core-dev.svc.cluster.local
+            port:
+              number: 8070
+    - match:
+        - uri:
+            prefix: /com/batch
+      route:
+        - destination:
+            host: core-com-batch-svc-dev.ns-app-core-dev.svc.cluster.local
+            port:
+              number: 8070
+    - match:
+        - uri:
+            prefix: /ccm
+      route:
+        - destination:
+            host: core-ccm-api-svc-dev.ns-app-core-dev.svc.cluster.local
+            port:
+              number: 8070
+    - match:
+        - uri:
+            prefix: /ccm/batch
+      route:
+        - destination:
+            host: core-ccm-batch-svc-dev.ns-app-core-dev.svc.cluster.local
+            port:
+              number: 8070
+    - match:
+        - uri:
+            prefix: /smv
+      route:
+        - destination:
+            host: core-smv-api-svc-dev.ns-app-core-dev.svc.cluster.local
+            port:
+              number: 8070
+    - match:
+        - uri:
+            prefix: /sts
+      route:
+        - destination:
+            host: core-sts-api-svc-dev.ns-app-core-dev.svc.cluster.local
+            port:
+              number: 8070
+    - match:
+        - uri:
+            prefix: /prmadm
+      route:
+        - destination:
+            host: channel-prmadm-api-svc-dev.ns-app-channel-dev.svc.cluster.local
+            port:
+              number: 8070
+    - match:
+        - uri:
+            prefix: /prm
+      route:
+        - destination:
+            host: channel-prm-api-svc-dev.ns-app-channel-dev.svc.cluster.local
+            port:
+              number: 8070
+    - match:
+        - uri:
+            prefix: /hmp
+      route:
+        - destination:
+            host: channel-hmp-api-svc-dev.ns-app-channel-dev.svc.cluster.local
+            port:
+              number: 8070
+    - match:
+        - uri:
+            prefix: /dashboard
+      route:
+        - destination:
+            host: spring-cloud-dataflow-server.ns-batch-mgnt-dev.svc.cluster.local
+            port:
+              number: 8070
+    - match:
+        - uri:
+            prefix: /fa
+      route:
+        - destination:
+            host: core-com-api-svc-dev-proto.ns-app-core-dev.svc.cluster.local
+            port:
+              number: 8070
+EOF

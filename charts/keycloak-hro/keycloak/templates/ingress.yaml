@@ -1,3 +1,8 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{- if .Values.ingress.enabled }}
 apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
 kind: Ingress
@@ -8,6 +13,9 @@ metadata:
     app.kubernetes.io/component: keycloak
     {{- if .Values.commonLabels }}
     {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- if .Values.ingress.labels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.ingress.labels "context" $ ) | nindent 4 }}
     {{- end }}
   annotations:
     {{- if .Values.commonAnnotations }}
@@ -28,7 +36,7 @@ spec:
           {{- if .Values.ingress.extraPaths }}
           {{- toYaml .Values.ingress.extraPaths | nindent 10 }}
           {{- end }}
-          - path: {{ .Values.ingress.path }}
+          - path: {{ include "common.tplvalues.render" ( dict "value" .Values.ingress.path "context" $) }}
             {{- if eq "true" (include "common.ingress.supportsPathType" .) }}
             pathType: {{ .Values.ingress.pathType }}
             {{- end }}

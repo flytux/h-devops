@@ -198,11 +198,7 @@ Add environment variables to configure database values
             {{- print "password" -}}
         {{- end -}}
     {{- else -}}
-        {{- if eq .Values.databaseType "mariadb" -}}
-            {{- print "mariadb-password" -}}
-        {{- else -}}
-            {{- print "password" -}}
-        {{- end -}}
+        {{- print "password" -}}
     {{- end -}}
 {{- end -}}
 {{- end -}}

@@ -2,6 +2,8 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: app-core-hro-com-ncrm
+  labels:
+    app: devops
 spec:
   params:
     - name: build-stage
@@ -18,7 +20,7 @@ spec:
     - name: deploy-manifest
     - name: sonar-project-key
     - name: rollout-strategy
-    - name: pipeline-name
+    - name: pipelinerun-name
     - name: mm-channel
   workspaces:
     - name: source 
@@ -29,9 +31,9 @@ spec:
       taskRef:
         name: mm-notify-start
       params:
-        - name: pipeline-name
-          value: $(params.pipeline-name)
-        - name: git-username
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
           value: $(params.git-username)
         - name: CHANNEL_NAME
           value: $(params.mm-channel)
@@ -135,9 +137,9 @@ spec:
         #name: print-result
         name: mm-send-result
       params:
-        - name: pipeline-name
-          value: $(params.pipeline-name)
-        - name: git-username
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
           value: $(params.git-username)
         - name: CHANNEL_NAME
           value: $(params.mm-channel)

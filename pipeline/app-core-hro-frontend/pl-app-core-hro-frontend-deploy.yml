@@ -1,0 +1,95 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  labels:
+    app: devops
+  name: app-core-hro-frontend-deploy
+spec:
+  params:
+    - name: git-revision
+    - name: username
+    - name: git-url
+    - name: clone-to-directory
+    - name: remote-ip
+    - name: remote-path
+    - name: exclude-path
+    - name: pipelinerun-name
+    - name: pipeline-name
+    - name: mm-channel
+  workspaces:
+    - name: source
+    - name: hro-tekton-logs
+  tasks:
+    - name: notify-pipeline-start
+      taskRef:
+        name: mm-notify-start
+      params:
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
+          value: $(params.username)
+        - name: CHANNEL_NAME
+          value: $(params.mm-channel)
+    - name: clone-sources
+      taskRef:
+        name: git-clone
+      runAfter:
+        - notify-pipeline-start
+      params:
+        - name: git-url
+          value: $(params.git-url)
+        - name: git-revision
+          value: $(params.git-revision)
+        - name: subdirectory
+          value: $(params.clone-to-directory)
+      workspaces:
+        - name: output
+          workspace: source
+    - name: vm-rsync
+      taskRef:
+        name: vm-rsync
+      runAfter:
+        - clone-sources
+      params:
+        - name: local-path
+          value: $(params.clone-to-directory)
+        - name: remote-ip
+          value: $(params.remote-ip)
+        - name: remote-path
+          value: $(params.remote-path)
+        - name: exclude-path
+          value: $(params.exclude-path)
+      workspaces:
+        - name: source
+          workspace: source
+  finally:
+    - name: clean-workspace
+      taskRef:
+        name: clean-workspace
+      params:
+        - name: subdirectory
+          value: $(params.clone-to-directory)
+      workspaces:
+        - name: output
+          workspace: source
+    - name: report-result
+      taskRef:
+        name: mm-send-result
+      params:
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
+          value: $(params.username)
+        - name: CHANNEL_NAME
+          value: $(params.mm-channel)
+    - name: save-pipelinerun-logs
+      taskRef:
+        name: tekton-logging
+      params:
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: pipeline-name
+          value: $(params.pipeline-name)
+      workspaces:
+        - name: hro-tekton-logs
+          workspace: hro-tekton-logs

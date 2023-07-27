@@ -6,7 +6,7 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 */}}
 {{- define "postgresql.primary.fullname" -}}
 {{- if eq .Values.architecture "replication" }}
-    {{- printf "%s-%s" (include "common.names.fullname" .) .Values.primary.name | trunc 63 | trimSuffix "-" -}}
+    {{- printf "%s-primary" (include "common.names.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
     {{- include "common.names.fullname" . -}}
 {{- end -}}
@@ -17,7 +17,7 @@ Create a default fully qualified app name for PostgreSQL read-only replicas obje
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
 {{- define "postgresql.readReplica.fullname" -}}
-{{- printf "%s-%s" (include "common.names.fullname" .) .Values.readReplicas.name | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-read" (include "common.names.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
@@ -80,9 +80,9 @@ Return the name for a custom database to create
 */}}
 {{- define "postgresql.database" -}}
 {{- if .Values.global.postgresql.auth.database }}
-    {{- printf "%s" (tpl .Values.global.postgresql.auth.database $) -}}
+    {{- .Values.global.postgresql.auth.database -}}
 {{- else if .Values.auth.database -}}
-    {{- printf "%s" (tpl .Values.auth.database $) -}}
+    {{- .Values.auth.database -}}
 {{- end -}}
 {{- end -}}
 
@@ -111,8 +111,6 @@ Get the replication-password key.
     {{- else -}}
         {{- "replication-password" -}}
     {{- end -}}
-{{- else -}}
-    {{- "replication-password" -}}
 {{- end -}}
 {{- end -}}
 
@@ -154,7 +152,9 @@ Get the user-password key.
 Return true if a secret object should be created
 */}}
 {{- define "postgresql.createSecret" -}}
-{{- if not (or .Values.global.postgresql.auth.existingSecret .Values.auth.existingSecret) -}}
+{{- if or .Values.global.postgresql.auth.existingSecret .Values.auth.existingSecret -}}
+    {{- false -}}
+{{- else -}}
     {{- true -}}
 {{- end -}}
 {{- end -}}
@@ -214,27 +214,10 @@ Get the PostgreSQL primary extended configuration ConfigMap name.
 {{- end -}}
 
 {{/*
-Get the PostgreSQL read replica extended configuration ConfigMap name.
-*/}}
-{{- define "postgresql.readReplicas.extendedConfigmapName" -}}
-    {{- printf "%s-extended-configuration" (include "postgresql.readReplica.fullname" .) -}}
-{{- end -}}
-
-{{/*
 Return true if a configmap object should be created for PostgreSQL primary with the extended configuration
 */}}
 {{- define "postgresql.primary.createExtendedConfigmap" -}}
 {{- if and .Values.primary.extendedConfiguration (not .Values.primary.existingExtendedConfigmap) }}
-    {{- true -}}
-{{- else -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Return true if a configmap object should be created for PostgreSQL read replica with the extended configuration
-*/}}
-{{- define "postgresql.readReplicas.createExtendedConfigmap" -}}
-{{- if .Values.readReplicas.extendedConfiguration }}
     {{- true -}}
 {{- else -}}
 {{- end -}}
@@ -268,17 +251,6 @@ Get the initialization scripts ConfigMap name.
     {{- printf "%s" (tpl .Values.primary.initdb.scriptsConfigMap $) -}}
 {{- else -}}
     {{- printf "%s-init-scripts" (include "postgresql.primary.fullname" .) -}}
-{{- end -}}
-{{- end -}}
-
-{/*
-Return true if TLS is enabled for LDAP connection
-*/}}
-{{- define "postgresql.ldap.tls.enabled" -}}
-{{- if and (kindIs "string" .Values.ldap.tls) (not (empty .Values.ldap.tls)) }}
-    {{- true -}}
-{{- else if and (kindIs "map" .Values.ldap.tls) .Values.ldap.tls.enabled }}
-    {{- true -}}
 {{- end -}}
 {{- end -}}
 

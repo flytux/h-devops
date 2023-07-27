@@ -1,46 +1,59 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: app-channel-hro-mobile-frontend
+  labels:
+    app: devops
+  name: app-channel-hro-mobile-frontend-approval
 spec:
   params:
-    - name: build-stage
     - name: git-url
     - name: git-revision
     - name: git-username
     - name: clone-to-directory
-    - name: image-url
-    - name: sonar-project-key
     - name: remote-ip
-    - name: application-name
-    - name: pipeline-name
+    - name: remote-path
+    - name: exclude-path
+    - name: pipelinerun-name
     - name: mm-channel
   workspaces:
     - name: source 
-    - name: credentials
-    - name: manifest-dir
   tasks:
     - name: notify-pipeline-start
       taskRef:
         name: mm-notify-start
       params:
-        - name: pipeline-name
-          value: $(params.pipeline-name)
-        - name: git-username
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
           value: $(params.git-username)
         - name: CHANNEL_NAME
           value: $(params.mm-channel)
-    - name: generate-id
+    - name: approval-task
       taskRef:
-        name: generate-build-id
+        apiVersion: tekton.automatiko.io/v1beta1
+        kind: ApprovalTask
+        name: approvaltask
+      runAfter:
+        - notify-pipeline-start
       params:
-        - name: base-version
-          value: $(params.build-stage)
+        - name: pipeline
+          value: "$(params.pipelinerun-name)"
+        - name: description
+          value: "Approval Request from pipeline $(params.pipelinerun-name) for test environment"
+        - name: approvers
+          value:
+          - "john@email.com"
+        - name: notifyOnSlack
+          value: "chlmobilefrontend"
     - name: clone-sources
       taskRef:
         name: git-clone
       runAfter:
-        - generate-id
+        - approval-task
+      when:
+        - input: $(tasks.approval-task.results.decision)
+          operator: in
+          values: [ "true" ]
       params:
         - name: git-url
           value: $(params.git-url)
@@ -51,79 +64,23 @@ spec:
       workspaces:
         - name: output
           workspace: source
-    - name: source-scan
+    - name: vm-rsync
       taskRef:
-        name: sonarqube-scan
+        name: vm-rsync
       runAfter:
         - clone-sources
       params:
-        - name: SONAR_PROJECT_KEY
-          value: $(params.sonar-project-key)
-        - name: SOURCE_TO_SCAN
+        - name: local-path
           value: $(params.clone-to-directory)
-      workspaces:
-        - name: source
-          workspace: source
-    - name: build-image
-      taskRef:
-        name: buildah
-      runAfter:
-        - clone-sources
-      params:
-        - name: IMAGE
-          value: $(params.image-url):$(tasks.generate-id.results.build-id)
-        - name: CONTEXT
-          value: $(params.clone-to-directory)
-      workspaces:
-        - name: source
-          workspace: source
-    - name: image-scan
-      taskRef:
-        name: trivy-scan
-      runAfter:
-        - build-image
-      params:
-        - name: IMAGE
-          value: $(params.image-url):$(tasks.generate-id.results.build-id)
-      workspaces:
-        - name: manifest-dir
-          workspace: manifest-dir
-    - name: approval-task
-      taskRef:
-        apiVersion: tekton.automatiko.io/v1beta1
-        kind: ApprovalTask
-        name: approvaltask
-      runAfter:
-        - build-image
-      params:
-        - name: pipeline
-          value: "$(params.pipeline-name)"
-        - name: description
-          value: "Approval Request from pipeline $(params.pipeline-name) for test environment"
-        - name: approvers
-          value:
-          - "john@email.com"
-        - name: notifyOnSlack
-          value: "chlmobilefrontend"
-    - name: vm-deploy
-      taskRef:
-        name: vm-deploy
-      runAfter:
-        - approval-task
-      when:
-        - input: $(tasks.approval-task.results.decision)
-          operator: in
-          values: [ "true" ]
-      params:
         - name: remote-ip
           value: $(params.remote-ip)
-        - name: image
-          value: $(params.image-url):$(tasks.generate-id.results.build-id)
-        - name: container-name
-          value: $(params.application-name)
+        - name: remote-path
+          value: $(params.remote-path)
+        - name: exclude-path
+          value: $(params.exclude-path)
       workspaces:
-        - name: credentials
-          workspace: credentials
+        - name: source
+          workspace: source
   finally:
     - name: clean-workspace
       taskRef:
@@ -136,12 +93,11 @@ spec:
           workspace: source
     - name: report-result
       taskRef:
-        #name: print-result
         name: mm-send-result
       params:
-        - name: pipeline-name
-          value: $(params.pipeline-name)
-        - name: git-username
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
           value: $(params.git-username)
         - name: CHANNEL_NAME
           value: $(params.mm-channel)

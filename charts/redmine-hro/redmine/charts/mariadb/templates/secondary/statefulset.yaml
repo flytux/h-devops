@@ -71,11 +71,6 @@ spec:
       {{- else if .Values.priorityClassName }}
       priorityClassName: {{ .Values.priorityClassName | quote }}
       {{- end }}
-      {{- if .Values.secondary.runtimeClassName }}
-      runtimeClassName: {{ .Values.secondary.runtimeClassName | quote }}
-      {{- else if .Values.runtimeClassName }}
-      runtimeClassName: {{ .Values.runtimeClassName | quote }}
-      {{- end }}
       {{- if .Values.secondary.podSecurityContext.enabled }}
       securityContext: {{- omit .Values.secondary.podSecurityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}
@@ -187,9 +182,7 @@ spec:
             - name: mysql
               containerPort: 3306
           {{- if not .Values.diagnosticMode.enabled }}
-          {{- if .Values.secondary.customStartupProbe }}
-          startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.secondary.customStartupProbe "context" $) | nindent 12 }}
-          {{- else if .Values.secondary.startupProbe.enabled }}
+          {{- if .Values.secondary.startupProbe.enabled }}
           startupProbe: {{- omit .Values.secondary.startupProbe "enabled" | toYaml | nindent 12 }}
             exec:
               command:
@@ -201,10 +194,10 @@ spec:
                       password_aux=$(cat "$MARIADB_MASTER_ROOT_PASSWORD_FILE")
                   fi
                   mysqladmin status -uroot -p"${password_aux}"
+          {{- else if .Values.secondary.customStartupProbe }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.secondary.customStartupProbe "context" $) | nindent 12 }}
           {{- end }}
-          {{- if .Values.secondary.customLivenessProbe }}
-          livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.secondary.customLivenessProbe "context" $) | nindent 12 }}
-          {{- else if .Values.secondary.livenessProbe.enabled }}
+          {{- if .Values.secondary.livenessProbe.enabled }}
           livenessProbe: {{- omit .Values.secondary.livenessProbe "enabled" | toYaml | nindent 12 }}
             exec:
               command:
@@ -216,10 +209,10 @@ spec:
                       password_aux=$(cat "$MARIADB_MASTER_ROOT_PASSWORD_FILE")
                   fi
                   mysqladmin status -uroot -p"${password_aux}"
+          {{- else if .Values.secondary.customLivenessProbe }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.secondary.customLivenessProbe "context" $) | nindent 12 }}
           {{- end }}
-          {{- if .Values.secondary.customReadinessProbe }}
-          readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.secondary.customReadinessProbe "context" $) | nindent 12 }}
-          {{- else if .Values.secondary.readinessProbe.enabled }}
+          {{- if .Values.secondary.readinessProbe.enabled }}
           readinessProbe: {{- omit .Values.secondary.readinessProbe "enabled" | toYaml | nindent 12 }}
             exec:
               command:
@@ -231,6 +224,8 @@ spec:
                       password_aux=$(cat "$MARIADB_MASTER_ROOT_PASSWORD_FILE")
                   fi
                   mysqladmin status -uroot -p"${password_aux}"
+          {{- else if .Values.secondary.customReadinessProbe }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.secondary.customReadinessProbe "context" $) | nindent 12 }}
           {{- end }}
           {{- end }}
           {{- if .Values.secondary.resources }}
@@ -306,13 +301,10 @@ spec:
           {{- if .Values.metrics.resources }}
           resources: {{- toYaml .Values.metrics.resources | nindent 12 }}
           {{- end }}
-          volumeMounts:
           {{- if and .Values.auth.usePasswordFiles (not .Values.auth.customPasswordFiles) }}
+          volumeMounts:
             - name: mariadb-credentials
               mountPath: /opt/bitnami/mysqld-exporter/secrets/
-          {{- end }}
-          {{- if .Values.metrics.extraVolumeMounts.secondary }}
-          {{- include "common.tplvalues.render" (dict "value" .Values.metrics.extraVolumeMounts.secondary "context" $) | nindent 12 }}
           {{- end }}
         {{- end }}
         {{- if .Values.secondary.sidecars }}
@@ -348,9 +340,6 @@ spec:
           app.kubernetes.io/component: secondary
         {{- if .Values.secondary.persistence.annotations }}
         annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.secondary.persistence.annotations "context" $ ) | nindent 10 }}
-        {{- end }}
-        {{- if .Values.primary.persistence.labels }}
-        labels: {{- include "common.tplvalues.render" (dict "value" .Values.primary.persistence.labels "context" $) | nindent 10 }}
         {{- end }}
       spec:
         accessModes:

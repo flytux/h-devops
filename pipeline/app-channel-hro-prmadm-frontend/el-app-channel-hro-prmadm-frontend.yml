@@ -1,0 +1,479 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: app-channel-hro-prmadm-frontend-listener
+spec:
+  serviceAccountName: sa-pipeline-trigger
+  triggers:
+    - name: dev-trigger
+      interceptors:
+        - name: "CEL filter: dev branch only"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.ref in ['refs/heads/dev']"
+      bindings:
+        - ref: dev-app-channel-hro-prmadm-frontend-binding
+      template:
+        ref: dev-app-channel-hro-prmadm-frontend-template
+    - name: test-trigger
+      interceptors:
+        - name: "CEL filter: merge request only"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_kind in ['merge_request']"
+        - name: "CEL filter: merge from dev branch only"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.source_branch in ['dev']"
+        - name: "CEL filter: merge to test branch"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.target_branch in ['test']"
+        - name: "CEL filter: merge action only"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.action in ['merge']"
+      bindings:
+        - ref: test-app-channel-hro-prmadm-frontend-binding
+      template:
+        ref: test-app-channel-hro-prmadm-frontend-template
+    - name: prd-issue-trigger
+      interceptors:
+        - name: "CEL filter: merge request only"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_kind in ['merge_request']"
+        - name: "CEL filter: merge from test branch only"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.source_branch in ['test']"
+        - name: "CEL filter: merge to main branch only"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.target_branch in ['main']"
+        - name: "CEL filter: merge action only"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.action in ['merge']"
+      bindings:
+        - ref: prd-issue-app-channel-hro-prmadm-frontend-binding
+      template:
+        ref: prd-issue-app-channel-hro-prmadm-frontend-template
+    - name: prd-redmine-trigger
+      interceptors:
+        - name: "CEL filter: redmine tracker"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.payload.issue.tracker.name in ['배포 승인']"
+        - name: "CEL filter: redmine status"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.payload.issue.status.name in ['Deploy-Approved']"
+        - name: "CEL overlay: get git-revision"
+          ref:
+            name: "cel"
+          params:
+          - name: "overlays"
+            value:
+            - key: "git-revision"
+              expression: "body.payload.issue.description.split(' ')[4]"
+      bindings:
+        - ref: prd-redmine-app-channel-hro-prmadm-frontend-binding
+      template:
+        ref: prd-redmine-app-channel-hro-prmadm-frontend-template
+    - name: prd-mattermost-trigger
+      interceptors:
+        - name: "CEL filter: mattermost team"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.team_domain in ['chl']"
+        - name: "CEL filter: mattermost channel"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.channel_name in ['hro-prmadm-frontend']"
+        - name: "CEL overlay: get git-revision"
+          ref:
+            name: "cel"
+          params:
+          - name: "overlays"
+            value:
+            - key: "git-revision"
+              expression: "body.text.split(' ')[1]"
+      bindings:
+        - ref: prd-mattermost-app-channel-hro-prmadm-frontend-binding
+      template:
+        ref: prd-mattermost-app-channel-hro-prmadm-frontend-template
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: dev-app-channel-hro-prmadm-frontend-binding
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.after)
+    - name: gitrepositoryurl
+      value: $(body.project.http_url)
+    - name: gitusername
+      value: $(body.user_username)
+    - name: project-name
+      value: $(body.project.name)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: dev-app-channel-hro-prmadm-frontend-template
+spec:
+  params:
+    - name: gitrevision
+      description: The git revision
+    - name: gitrepositoryurl
+      description: The git repository url
+    - name: gitusername
+      description: The git username
+    - name: project-name
+      description: The project name
+  resourcetemplates:     
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: dev-app-channel-hro-prmadm-frontend-pipeline-
+        labels:
+          app: devops
+          build-stage: dev
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-channel-hro-prmadm-frontend
+        params:
+        - name: git-url
+          value: $(tt.params.gitrepositoryurl)
+        - name: git-revision
+          value: $(tt.params.gitrevision)
+        - name: git-username
+          value: $(tt.params.gitusername)
+        - name: clone-to-directory
+          value: $(tt.params.gitrevision)
+        - name: exclude-path
+          value: ""
+        - name: remote-ip
+          value: "10.3.20.12"
+        - name: remote-path
+          value: "/hro_app/app/web/DEV-PRMADM-11"
+        - name: sonar-project-key
+          value: "channel-prmadm-frontend-dev"
+        - name: pipelinerun-name
+          value: $(context.pipelineRun.name)
+        - name: mm-channel
+          value: "chl:$(tt.params.project-name)"
+        workspaces:
+        - name: source
+          persistentvolumeclaim:
+            claimName: pvc-app-channel-$(tt.params.project-name)
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: test-app-channel-hro-prmadm-frontend-binding
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.object_attributes.merge_commit_sha)
+    - name: gitrepositoryurl
+      value: $(body.project.http_url)
+    - name: gitusername
+      value: $(body.user.username)
+    - name: project-name
+      value: $(body.project.name)
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: test-app-channel-hro-prmadm-frontend-template
+spec:
+  params:
+    - name: gitrevision
+      description: The git revision
+    - name: gitrepositoryurl
+      description: The git repository url
+    - name: gitusername
+      description: The git username
+    - name: project-name
+      description: The project name
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: test-app-channel-hro-prmadm-frontend-pipeline-
+        labels:
+          app: devops
+          build-stage: test
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-channel-hro-prmadm-frontend-approval
+        params:
+        - name: git-url
+          value: $(tt.params.gitrepositoryurl)
+        - name: git-revision
+          value: $(tt.params.gitrevision)
+        - name: git-username
+          value: $(tt.params.gitusername)
+        - name: clone-to-directory
+          value: $(tt.params.gitrevision)
+        - name: exclude-path
+          value: ""
+        - name: remote-ip
+          value: "10.3.20.21"
+        - name: remote-path
+          value: "/hro_app/app/web/TEST-PRMADM-11"
+        - name: pipelinerun-name
+          value: $(context.pipelineRun.name)
+        - name: mm-channel
+          value: "chl:$(tt.params.project-name)"
+        workspaces:
+        - name: source
+          persistentvolumeclaim:
+            claimName: pvc-app-channel-$(tt.params.project-name)
+---
+
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: prd-issue-app-channel-hro-prmadm-frontend-binding
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.object_attributes.merge_commit_sha)
+    - name: gitusername
+      value: $(body.user.username)
+    - name: project-name
+      value: $(body.project.name)
+    - name: commit-message
+      value: $(body.object_attributes.last_commit.message)
+    - name: merge-title
+      value: $(body.object_attributes.title)
+    - name: merge-description
+      value: $(body.object_attributes.description)
+    - name: merge-date
+      value: $(body.object_attributes.updated_at)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: prd-issue-app-channel-hro-prmadm-frontend-template
+spec:
+  params:
+    - name: gitrevision
+      description: The git revision
+    - name: gitusername
+      description: The git username
+    - name: project-name
+      description: The project name
+    - name: commit-message
+      description: The last commit message
+    - name: merge-title
+    - name: merge-description
+    - name: merge-date
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: prd-issue-app-channel-hro-prmadm-frontend-pipeline-
+        labels:
+          app: devops
+          build-stage: prd
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-channel-hro-prmadm-frontend-issue
+        params:
+        - name: git-revision
+          value: $(tt.params.gitrevision)
+        - name: git-username
+          value: $(tt.params.gitusername)
+        - name: red-project-name
+          value: $(tt.params.project-name)
+        - name: application-name
+          value: "channel-prmadm-frontend"
+        - name: last-commit-message
+          value: $(tt.params.commit-message)
+        - name: merge-title
+          value: $(tt.params.merge-title)
+        - name: merge-description
+          value: $(tt.params.merge-description)
+        - name: merge-date
+          value: $(tt.params.merge-date)
+        - name: pipelinerun-name
+          value: $(context.pipelineRun.name)
+        - name: mm-channel
+          value: "chl:$(tt.params.project-name)"
+        workspaces:
+        - name: hro-redmine-config
+          secret:
+            secretName: hro-redmine-config
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: prd-redmine-app-channel-hro-prmadm-frontend-binding
+spec:
+  params:
+    - name: git-revision
+      value: $(extensions.git-revision)
+    - name: red-username
+      value: $(body.payload.issue.author.login)
+    - name: red-project-name
+      value: $(body.payload.issue.project.name)
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: prd-redmine-app-channel-hro-prmadm-frontend-template
+spec:
+  params:
+    - name: git-revision
+      description: The git revision
+    - name: red-username
+    - name: red-project-name
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: prd-redmine-app-channel-hro-prmadm-frontend-pipeline-
+        labels:
+          app: devops
+          build-stage: prd
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-channel-hro-prmadm-frontend-deploy
+        params:
+        - name: username
+          value: $(tt.params.red-username)
+        - name: git-url
+          value: "https://gitlab.herosonsa.co.kr/app/channel/$(tt.params.red-project-name).git"
+        - name: git-revision
+          value: $(tt.params.git-revision)
+        - name: clone-to-directory
+          value: $(tt.params.git-revision)
+        - name: remote-ip
+          value: "10.1.20.12"
+        - name: remote-path
+          value: "/hro_app/app/web/PRD-PRMADM-11"
+        - name: exclude-path
+          value: ""
+        - name: pipelinerun-name
+          value: $(context.pipelineRun.name)
+        - name: pipeline-name
+          value: $(context.pipeline.name)
+        - name: mm-channel
+          value: "chl:$(tt.params.red-project-name)"
+        workspaces:
+        - name: source
+          persistentvolumeclaim:
+            claimName: pvc-app-channel-$(tt.params.red-project-name)
+        - name: hro-tekton-logs
+          persistentvolumeclaim:
+            claimName: pvc-hro-tekton-logs
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: prd-mattermost-app-channel-hro-prmadm-frontend-binding
+spec:
+  params:
+    - name: git-revision
+      value: $(extensions.git-revision)
+    - name: mattermost-username
+      value: $(body.user_name)
+    - name: mattermost-team
+      value: $(body.team_domain)
+    - name: mattermost-channel
+      value: $(body.channel_name)
+---
+
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: prd-mattermost-app-channel-hro-prmadm-frontend-template
+spec:
+  params:
+    - name: git-revision
+      description: The git revision
+    - name: mattermost-username
+      description: The mattermost username
+    - name: mattermost-team
+      description: The mattermost team
+    - name: mattermost-channel
+      description: The mattermost channel
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: prd-mattermost-app-channel-hro-prmadm-frontend-pipeline-
+        labels:
+          app: devops
+          build-stage: prd
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-channel-hro-prmadm-frontend-deploy
+        params:
+        - name: username
+          value: $(tt.params.mattermost-username)
+        - name: git-url
+          value: "https://gitlab.herosonsa.co.kr/app/channel/$(tt.params.mattermost-channel).git"
+        - name: git-revision
+          value: $(tt.params.git-revision)
+        - name: clone-to-directory
+          value: $(tt.params.git-revision)
+        - name: remote-ip
+          value: "10.1.20.12"
+        - name: remote-path
+          value: "/hro_app/app/web/PRD-PRMADM-11"
+        - name: exclude-path
+          value: ""
+        - name: pipelinerun-name
+          value: $(context.pipelineRun.name)
+        - name: pipeline-name
+          value: $(context.pipeline.name)
+        - name: mm-channel
+          value: "$(tt.params.mattermost-team):$(tt.params.mattermost-channel)"
+        workspaces:
+        - name: source
+          persistentvolumeclaim:
+            claimName: pvc-app-channel-$(tt.params.mattermost-channel)
+        - name: hro-tekton-logs
+          persistentvolumeclaim:
+            claimName: pvc-hro-tekton-logs

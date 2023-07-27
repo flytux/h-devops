@@ -2,6 +2,7 @@ controller:
   image:
     registry: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/k8s.gcr.io
     image: ingress-nginx/controller
+    digest: 
 
     patch:
       enabled: true

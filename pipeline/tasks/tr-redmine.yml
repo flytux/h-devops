@@ -1,0 +1,27 @@
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  generateName: redmine-issue- 
+  labels: 
+    tekton.dev/task: redmine-issue
+spec:
+  serviceAccountName: sa-pipeline-runner
+  taskRef:
+    name: redmine-issue
+  params: 
+    - name: red-issue-subject
+      value: "app-name merged by gituser"
+    - name: red-project-name
+      value: "hro-test"
+    - name: red-issue-description
+      value: "[image]: tbd5d1uh.private-ncr.fin-ntruss.com/app/core/hro-test: test-230523-060904-191ef97c\n
+      [commit-message]: commit\n
+      [project]: hro-test\n
+      [assignee]: devops\n
+      [reviewer]: devops\n
+      [merged-sha]: 1212121212121"
+  workspaces:
+    - name: hro-redmine-config
+      secret:
+        secretName: hro-redmine-config
+

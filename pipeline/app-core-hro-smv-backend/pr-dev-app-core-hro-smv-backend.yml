@@ -2,6 +2,9 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   generateName: dev-app-core-hro-smv-backend-pipeline-
+  labels:
+    app: devops
+    build-stage: dev
 spec:
   serviceAccountName: sa-pipeline-runner
   pipelineRef:
@@ -18,9 +21,11 @@ spec:
   - name: clone-to-directory
     value: $(context.pipelineRun.name)
   - name: image-url
-    value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/core/hro-smv-backend"
+    value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/dev/core/hro-smv-backend"
 #  - name: argo-app-name
 #    value: "core-smv-api-dev"
+  - name: spring-profile
+    value: "dev"
   - name: gitops-url
     value: "https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git"
   - name: gitops-revision

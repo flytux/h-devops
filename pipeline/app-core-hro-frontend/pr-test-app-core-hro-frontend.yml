@@ -2,13 +2,14 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   generateName: test-app-core-hro-frontend-pipeline-
+  labels:
+    app: devops
+    build-stage: test
 spec:
   serviceAccountName: sa-pipeline-runner
   pipelineRef:
           name: app-core-hro-frontend-approval
   params:
-  - name: build-stage
-    value: "test"
   - name: git-url
     value: "https://gitlab.herosonsa.co.kr/app/core/hro-frontend.git"
   - name: git-revision
@@ -17,12 +18,12 @@ spec:
     value: "tekton-dashboard"
   - name: clone-to-directory
     value: $(context.pipelineRun.name)
-  - name: image-url
-    value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/core/hro-frontend"
+  - name: exclude-path
+    value: "--exclude='WEB-INF'"
   - name: remote-ip
     value: "10.3.20.12"
-  - name: application-name
-    value: "core-frontend-test"
+  - name: remote-path
+    value: "/hro_app/app/web/TEST-BIZ-11/ncrm"
   - name: sonar-project-key
     value: "core-frontend-test"
   - name: pipeline-name
@@ -33,11 +34,9 @@ spec:
   - name: source
     persistentvolumeclaim:
       claimName: pvc-app-core-hro-frontend
-  - name: credentials
-    secret:
-      secretName: hro-vm-auth
-  - name: manifest-dir
-    emptyDir: {}
+#  - name: ssh-creds
+#    secret:
+#      secretName: hro-rsync-ssh
 
 
 

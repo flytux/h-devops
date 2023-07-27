@@ -1,0 +1,66 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8s-rbac
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: dev-build
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dev-pvc
+  namespace: dev-build
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: dev-build
+  name: shell-dev
+spec:
+  selector:
+    matchLabels:
+      app: dev
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: dev
+    spec:
+      containers:
+      - name: dev
+        image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/dev:v1
+        imagePullPolicy: Always
+        stdin: true
+        tty: true
+        env:
+          - name: TZ
+            value: Asia/Seoul
+        volumeMounts:
+        - name: dev-volume
+          mountPath: /root/works
+        - name: containerd-sock-volume
+          mountPath: /run/containerd/containerd.sock
+      imagePullSecrets:
+        - name: hero-reg
+      volumes:
+        - name: dev-volume
+          persistentVolumeClaim:
+            claimName: dev-pvc
+        - name: containerd-sock-volume
+          hostPath:
+            path: /run/containerd/containerd.sock
+            type: Socket

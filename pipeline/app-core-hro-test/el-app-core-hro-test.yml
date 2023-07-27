@@ -1,0 +1,544 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: app-core-hro-test-listener
+spec:
+  serviceAccountName: sa-pipeline-trigger
+  triggers:
+    - name: dev-trigger
+      interceptors:
+        - name: "CEL filter: dev branch only"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.ref in ['refs/heads/dev']"
+      bindings:
+        - ref: dev-app-core-hro-test-binding
+      template:
+        ref: dev-app-core-hro-test-template
+    - name: test-trigger
+      interceptors:
+        - name: "CEL filter: merge to test branch"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_kind in ['merge_request']"
+        - name: "CEL filter: merge to test branch"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.source_branch in ['dev']"
+        - name: "CEL filter: merge to test branch"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.target_branch in ['test']"
+        - name: "CEL filter: merge to test branch"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.action in ['merge']"
+      bindings:
+        - ref: test-app-core-hro-test-binding
+      template:
+        ref: test-app-core-hro-test-template
+    - name: prd-build-trigger
+      interceptors:
+        - name: "CEL filter: merge to main branch"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_kind in ['merge_request']"
+        - name: "CEL filter: merge to main branch"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.source_branch in ['test']"
+        - name: "CEL filter: merge to main branch"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.target_branch in ['main']"
+        - name: "CEL filter: merge to main branch"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.object_attributes.action in ['merge']"
+      bindings:
+        - ref: prd-build-app-core-hro-test-binding
+      template:
+        ref: prd-build-app-core-hro-test-template
+    - name: prd-redmine-trigger
+      interceptors:
+        - name: "CEL filter: redmine tracker and status"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.payload.issue.tracker.name in ['배포 승인']"
+        - name: "CEL filter: redmine tracker and status"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.payload.issue.status.name in ['Deploy-Approved']"
+        - name: "CEL overlay: get image-url"
+          ref:
+            name: "cel"
+          params:
+          - name: "overlays"
+            value:
+            - key: "image-url"
+              expression: "body.payload.issue.description.split(' ')[1]"
+        - name: "CEL overlay: get build-id"
+          ref:
+            name: "cel"
+          params:
+          - name: "overlays"
+            value:
+            - key: "build-id"
+              expression: "body.payload.issue.description.split(' ')[2]"
+      bindings:
+        - ref: prd-redmine-app-core-hro-test-binding
+      template:
+        ref: prd-redmine-app-core-hro-test-template
+    - name: prd-mattermost-trigger
+      interceptors:
+        - name: "CEL filter: mattermost team and channel"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.team_domain in ['core']"
+        - name: "CEL filter: mattermost team and channel"
+          ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: "body.channel_name in ['hro-test']"
+        #- name: "CEL overlay: get image-url"
+        #  ref:
+        #    name: "cel"
+        #  params:
+        #  - name: "overlays"
+        #    value:
+        #    - key: "image-url"
+        #      expression: "body.text.split(' ')[1]"
+        - name: "CEL overlay: get build-id"
+          ref:
+            name: "cel"
+          params:
+          - name: "overlays"
+            value:
+            - key: "build-id"
+              expression: "body.text.split(' ')[1]"
+      bindings:
+        - ref: prd-mattermost-app-core-hro-test-binding
+      template:
+        ref: prd-mattermost-app-core-hro-test-template
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: dev-app-core-hro-test-binding
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.after)
+    - name: gitrepositoryurl
+      value: $(body.project.http_url)
+    - name: gitusername
+      value: $(body.user_username)
+    - name: project-name
+      value: $(body.project.name)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: dev-app-core-hro-test-template
+spec:
+  params:
+    - name: gitrevision
+      description: The git revision
+    - name: gitrepositoryurl
+      description: The git repository url
+    - name: gitusername
+      description: The git username
+    - name: project-name
+      description: The project name
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: dev-app-core-hro-test-pipeline-
+        labels:
+          app: devops
+          build-stage: dev
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-core-hro-test
+        params:
+        - name: build-stage
+          value: "dev"
+        - name: git-url
+          value: $(tt.params.gitrepositoryurl)
+        - name: git-revision
+          value: $(tt.params.gitrevision)
+        - name: git-username
+          value: $(tt.params.gitusername)
+        - name: clone-to-directory
+          value: $(tt.params.gitrevision)
+        - name: image-url
+          value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/core/$(tt.params.project-name)"
+        - name: spring-profile
+          value: "dev"
+        - name: gitops-url
+          value: "https://hello-3031818.devtools.fin-ncloud.com/3031818/app-core-hro-test.git"
+        - name: gitops-revision
+          value: "dev"
+        - name: gitops-path
+          value: "dev"
+        - name: rollout-strategy
+          value: "rolling"
+        - name: deploy-manifest
+          value: "kustomization.yaml"
+        - name: sonar-project-key
+          value: "dev-app-core-hro-test"
+        - name: pipelinerun-name
+          value: $(context.pipelineRun.name)
+        - name: mm-channel
+          value: "core:$(tt.params.project-name)"
+        workspaces:
+        - name: source
+          persistentvolumeclaim:
+            claimName: pvc-app-core-test
+        - name: gitops
+          emptyDir: {}
+        - name: manifest-dir
+          emptyDir: {}
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: test-app-core-hro-test-binding
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.object_attributes.merge_commit_sha)
+    - name: gitrepositoryurl
+      value: $(body.project.http_url)
+    - name: gitusername
+      value: $(body.user.username)
+    - name: project-name
+      value: $(body.project.name)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: test-app-core-hro-test-template
+spec:
+  params:
+    - name: gitrevision
+      description: The git revision
+    - name: gitrepositoryurl
+      description: The git repository url
+    - name: gitusername
+      description: The git username
+    - name: project-name
+      description: The git project name
+  resourcetemplates:     
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: test-app-core-hro-test-pipeline-
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-core-hro-test-approval
+        params:
+        - name: build-stage
+          value: "test"
+        - name: git-url
+          value: $(tt.params.gitrepositoryurl)
+        - name: git-revision
+          value: $(tt.params.gitrevision)
+        - name: git-username
+          value: $(tt.params.gitusername)
+        - name: clone-to-directory
+          value: $(tt.params.gitrevision)
+        - name: image-url
+          value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/core/hro-test"
+        - name: spring-profile
+          value: "test"
+        - name: gitops-url
+          value: "https://hello-3031818.devtools.fin-ncloud.com/3031818/app-core-hro-test.git"
+        - name: gitops-revision
+          value: "test"
+        - name: gitops-path
+          value: "test"
+        - name: rollout-strategy
+          value: "rolling"
+        - name: deploy-manifest
+          value: "kustomization.yaml"
+        - name: pipelinerun-name
+          value: $(context.pipelineRun.name)
+        - name: mm-channel
+          value: "core:$(tt.params.project-name)"
+        workspaces:
+        - name: source
+          persistentvolumeclaim:
+            claimName: pvc-app-core-test
+        - name: gitops
+          emptyDir: {}
+        - name: manifest-dir
+          emptyDir: {}
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: prd-build-app-core-hro-test-binding
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.object_attributes.merge_commit_sha)
+    - name: gitrepositoryurl
+      value: $(body.project.http_url)
+    - name: gitusername
+      value: $(body.user.username)
+    - name: project-name
+      value: $(body.project.name)
+    - name: commit-message
+      value: $(body.object_attributes.last_commit.message)
+    - name: merge-title
+      value: $(body.object_attributes.title)
+    - name: merge-description
+      value: $(body.object_attributes.description)
+    - name: merge-date
+      value: $(body.object_attributes.updated_at)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: prd-build-app-core-hro-test-template
+spec:
+  params:
+    - name: gitrevision
+      description: The git revision
+    - name: gitrepositoryurl
+      description: The git repository url
+    - name: gitusername
+      description: The git username
+    - name: project-name
+      description: The git project name
+    - name: commit-message
+      description: The last commit message
+    - name: merge-title
+    - name: merge-description
+    - name: merge-date
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: prd-build-app-core-hro-test-pipeline-
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-core-hro-test-build
+        params:
+        - name: build-stage
+          value: "prd"
+        - name: git-url
+          value: $(tt.params.gitrepositoryurl)
+        - name: git-revision
+          value: $(tt.params.gitrevision)
+        - name: git-username
+          value: $(tt.params.gitusername)
+        - name: clone-to-directory
+          value: $(tt.params.gitrevision)
+        - name: image-url
+          value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/core/hro-test"
+        - name: spring-profile
+          value: "prd"
+        - name: red-project-name
+          value: $(tt.params.project-name)
+        - name: application-name
+          value: "core-test"
+        - name: last-commit-message
+          value: $(tt.params.commit-message)
+        - name: merge-title
+          value: $(tt.params.merge-title)
+        - name: merge-description
+          value: $(tt.params.merge-description)
+        - name: merge-date
+          value: $(tt.params.merge-date)
+        - name: pipelinerun-name
+          value: $(context.pipelineRun.name)
+        - name: pipeline-name
+          value: $(context.pipeline.name)
+        - name: mm-channel
+          value: "core:$(tt.params.project-name)"
+        workspaces:
+        - name: source
+          persistentvolumeclaim:
+            claimName: pvc-app-core-test
+        - name: manifest-dir
+          emptyDir: {}
+        - name: hro-redmine-config
+          secret:
+            secretName: hro-redmine-config
+        - name: hro-tekton-logs
+          persistentvolumeclaim:
+            claimName: pvc-hro-tekton-logs
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: prd-redmine-app-core-hro-test-binding
+spec:
+  params:
+    - name: image-url
+      value: $(extensions.image-url)
+    - name: build-id
+      value: $(extensions.build-id)
+    - name: red-username
+      value: $(body.payload.issue.author.login)
+    - name: red-project-name
+      value: $(body.payload.issue.project.name)
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: prd-redmine-app-core-hro-test-template
+spec:
+  params:
+    - name: image-url
+      description: The image url
+    - name: build-id
+    - name: red-username
+    - name: red-project-name
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: prd-redmine-app-core-hro-test-pipeline-
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-core-hro-test-deploy
+        params:
+        - name: username
+          value: $(tt.params.red-username)
+        - name: image-url
+          value: $(tt.params.image-url)
+        - name: build-id
+          value: $(tt.params.build-id)
+        - name: gitops-url
+          value: "https://hello-3031818.devtools.fin-ncloud.com/3031818/app-core-hro-test.git"
+        - name: gitops-revision
+          value: "main"
+        - name: gitops-path
+          value: "main"
+        - name: rollout-strategy
+          value: "rolling"
+        - name: deploy-manifest
+          value: "kustomization.yaml"
+        - name: pipelinerun-name
+          value: $(context.pipelineRun.name)
+        - name: pipeline-name
+          value: $(context.pipeline.name)
+        - name: mm-channel
+          value: "core:$(tt.params.red-project-name)"
+        workspaces:
+        - name: gitops
+          emptyDir: {}
+        - name: hro-tekton-logs
+          persistentvolumeclaim:
+            claimName: pvc-hro-tekton-logs
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: prd-mattermost-app-core-hro-test-binding
+spec:
+  params:
+    #- name: image-url
+    #  value: $(extensions.image-url)
+    - name: build-id
+      value: $(extensions.build-id)
+    - name: mattermost-username
+      value: $(body.user_name)
+    - name: mattermost-team
+      value: $(body.team_domain)
+    - name: mattermost-channel
+      value: $(body.channel_name)
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: prd-mattermost-app-core-hro-test-template
+spec:
+  params:
+    #- name: image-url
+    - name: build-id
+    - name: mattermost-username
+      description: The mattermost username
+    - name: mattermost-team
+      description: The mattermost team
+    - name: mattermost-channel
+      description: The mattermost channel
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: prd-mattermost-app-core-hro-test-pipeline-
+      spec:
+        serviceAccountName: sa-pipeline-runner
+        pipelineRef:
+          name: app-core-hro-test-deploy
+        params:
+        - name: username
+          value: $(tt.params.mattermost-username)
+        - name: image-url
+          value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/core/hro-test"
+        - name: build-id
+          value: $(tt.params.build-id)
+        - name: gitops-url
+          value: "https://hello-3031818.devtools.fin-ncloud.com/3031818/app-core-hro-test.git"
+        - name: gitops-revision
+          value: "main"
+        - name: gitops-path
+          value: "main"
+        - name: rollout-strategy
+          value: "rolling"
+        - name: deploy-manifest
+          value: "kustomization.yaml"
+        - name: pipelinerun-name
+          value: $(context.pipelineRun.name)
+        - name: pipeline-name
+          value: $(context.pipeline.name)
+        - name: mm-channel
+          value: "core:$(tt.params.mattermost-channel)"
+        workspaces:
+        - name: gitops
+          emptyDir: {}
+        - name: hro-tekton-logs
+          persistentvolumeclaim:
+            claimName: pvc-hro-tekton-logs
+

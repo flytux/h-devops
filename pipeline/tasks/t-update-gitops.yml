@@ -26,7 +26,8 @@ spec:
   steps:
   - name: git-checkout
     #image: alpine/git:v2.26.2
-    image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/alpine/git:v2.26.2
+    #image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/alpine/git:v2.26.2
+    image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/alpine/git:v2.40.1
     workingDir: "$(workspaces.gitops.path)"
     script: |
       #!/usr/bin/env sh
@@ -39,7 +40,8 @@ spec:
       git clone -b $(params.gitops-revision) $(params.gitops-url) .
   - name: update-yaml
     #image: alpine/git:v2.26.2
-    image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/alpine/git:v2.26.2
+    #image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/alpine/git:v2.26.2
+    image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/alpine/git:v2.40.1
     workingDir: "$(workspaces.gitops.path)"
     script: |
       #!/usr/bin/env sh
@@ -49,7 +51,8 @@ spec:
       sed -i "s|../base/.*$|../base/$(params.rollout-strategy)|" $(params.gitops-path)/$(params.deploy-manifest)
   - name: commit-push-changes-gitops
     #image: alpine/git:v2.26.2
-    image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/alpine/git:v2.26.2
+    #image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/alpine/git:v2.26.2
+    image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/alpine/git:v2.40.1
     workingDir: "$(workspaces.gitops.path)"
     script: |
       #!/usr/bin/env sh

@@ -1,0 +1,43 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: redmine-issue
+spec:
+  description: >-
+       Create approval issue in redmine
+
+  params:
+    - name: red-project-name
+    - name: red-issue-subject
+    - name: last-commit-message
+    - name: image-url
+      default: "no image"
+    - name: build-id
+      default: "no tag"
+    - name: git-username
+    - name: merge-date
+    - name: merge-title
+    - name: merge-description
+    - name: merge-commit-sha
+  steps:
+    - name: redmine-create-issue
+      image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/red-cli:hero
+      script: |
+        cp $(workspaces.hro-redmine-config.path)/.redmine.conf "$HOME"/.redmine.conf
+
+        redmine create \
+          --status "New" \
+          --tracker "배포 승인" \
+          --project "$(params.red-project-name)" \
+          --priority 3 \
+          --subject "$(params.red-issue-subject) 운영계 배포 요청" \
+          --description "[Image]: $(params.image-url) $(params.build-id) 
+        [Merge-Commit-Sha]: $(params.merge-commit-sha) 
+        [Merge-Title]: $(params.merge-title) 
+        [Merge-Description]: $(params.merge-description) 
+        [Last-Commit-Message]: $(params.last-commit-message) 
+        [Merge-Date]: $(params.merge-date) 
+        [Merged-By]: $(params.git-username)" 
+
+  workspaces:
+    - name: hro-redmine-config

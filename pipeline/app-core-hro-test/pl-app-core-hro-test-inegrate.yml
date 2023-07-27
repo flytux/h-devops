@@ -1,0 +1,289 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  labels:
+    app: devops
+  name: app-core-hro-test-integrate
+spec:
+  params:
+    - name: build-stage
+    - name: git-url
+    - name: git-revision
+    - name: git-username
+    - name: clone-to-directory
+    - name: image-url
+    - name: build-id
+    - name: spring-profile
+    - name: gitops-url
+    - name: gitops-revision
+    - name: gitops-path
+    - name: deploy-manifest
+    - name: sonar-project-key
+    - name: rollout-strategy
+    - name: red-project-name
+    - name: application-name
+    - name: last-commit-message
+    - name: merge-title
+    - name: merge-description
+    - name: merge-date
+    - name: pipeline-name
+    - name: mm-channel
+  workspaces:
+    - name: source 
+    - name: gitops
+    - name: manifest-dir
+    - name: hro-redmine-config
+  tasks:
+    - name: notify-pipeline-start
+      taskRef:
+        name: mm-notify-start
+      params:
+        - name: pipeline-name
+          value: $(params.pipeline-name)
+        - name: git-username
+          value: $(params.git-username)
+        - name: CHANNEL_NAME
+          value: $(params.mm-channel)
+    - name: generate-id
+      taskRef:
+        name: generate-build-id
+      when:
+        - input: $(params.build-stage)
+          operator: notin
+          values: [ "prd-deploy" ]
+      params:
+        - name: base-version
+          value: $(params.build-stage)
+    - name: clone-sources
+      taskRef:
+        name: git-clone
+      when:
+        - input: $(params.build-stage)
+          operator: notin
+          values: [ "prd-deploy" ]
+      runAfter:
+        - generate-id
+      params:
+        - name: git-url
+          value: $(params.git-url)
+        - name: git-revision
+          value: $(params.git-revision)
+        - name: subdirectory
+          value: $(params.clone-to-directory)
+      workspaces:
+        - name: output
+          workspace: source
+    - name: source-scan
+      taskRef:
+        name: sonarqube-scan
+      when:
+        - input: $(params.build-stage)
+          operator: in
+          values: [ "dev" ]
+      runAfter:
+        - clone-sources
+      params:
+        - name: SONAR_PROJECT_KEY
+          value: $(params.sonar-project-key)
+        - name: SOURCE_TO_SCAN
+          value: $(params.clone-to-directory)
+      workspaces:
+        - name: source
+          workspace: source
+    - name: build-image
+      taskRef:
+        name: jib-maven
+      when:
+        - input: $(params.build-stage)
+          operator: notin
+          values: [ "prd-deploy" ]
+      runAfter:
+        - clone-sources
+      params:
+        - name: IMAGE
+          value: $(params.image-url):$(tasks.generate-id.results.build-id)
+        - name: DIRECTORY
+          value: $(params.clone-to-directory)
+        - name: spring-profile
+          value: $(params.spring-profile)
+      workspaces:
+        - name: source
+          workspace: source
+    - name: image-scan
+      taskRef:
+        name: trivy-scan
+      when:
+        - input: $(params.build-stage)
+          operator: notin
+          values: [ "prd-deploy" ]
+      runAfter:
+        - build-image
+      params:
+        - name: IMAGE
+          value: $(params.image-url):$(tasks.generate-id.results.build-id)
+      workspaces:
+        - name: manifest-dir
+          workspace: manifest-dir
+    - name: deploy-approval-task
+      taskRef:
+        apiVersion: tekton.automatiko.io/v1beta1
+        kind: ApprovalTask
+        name: approvaltask
+      when:
+        - input: $(params.build-stage)
+          operator: in
+          values: [ "test" ]
+      runAfter:
+        - build-image
+      params:
+        - name: pipeline
+          value: "$(params.pipeline-name)"
+        - name: description
+          value: "Approval from pipeline $(params.pipeline-name) for test environment"
+        - name: approvers
+          value:
+          - "john@email.com"
+        - name: notifyOnSlack
+          value: "corehrotest"
+    - name: update-gitops-dev
+      taskRef:
+        name: update-gitops
+      when:
+        - input: $(params.build-stage)
+          operator: in
+          values: [ "dev" ]
+      runAfter:
+        - build-image
+      params:
+        - name: gitops-revision
+          value: $(params.gitops-revision)
+        - name: deploy-manifest
+          value: $(params.deploy-manifest)
+        - name: gitops-path
+          value: $(params.gitops-path)
+        - name: gitops-url
+          value: $(params.gitops-url)
+        - name: rollout-strategy
+          value: $(params.rollout-strategy)
+        - name: image-url
+          value: $(params.image-url)
+        - name: build-id
+          value: $(tasks.generate-id.results.build-id)
+      workspaces:
+        - name: gitops
+          workspace: gitops
+    - name: update-gitops-test
+      taskRef:
+        name: update-gitops
+      when:
+        - input: $(params.build-stage)
+          operator: in
+          values: [ "test" ]
+        - input: $(tasks.deploy-approval-task.results.decision)
+          operator: in
+          values: [ "true" ]
+      runAfter:
+        - deploy-approval-task
+      params:
+        - name: gitops-revision
+          value: $(params.gitops-revision)
+        - name: deploy-manifest
+          value: $(params.deploy-manifest)
+        - name: gitops-path
+          value: $(params.gitops-path)
+        - name: gitops-url
+          value: $(params.gitops-url)
+        - name: rollout-strategy
+          value: $(params.rollout-strategy)
+        - name: image-url
+          value: $(params.image-url)
+        - name: build-id
+          value: $(tasks.generate-id.results.build-id)
+      workspaces:
+        - name: gitops
+          workspace: gitops
+    - name: create-redmine-issue
+      taskRef:
+        name: redmine-issue
+      when:
+        - input: $(params.build-stage)
+          operator: in
+          values: [ "prd" ]
+      runAfter:
+        - build-image
+      params:
+        - name: red-project-name
+          value: $(params.red-project-name)
+        - name: red-issue-subject
+          value: "$(params.application-name)"
+        - name: last-commit-message
+          value: $(params.last-commit-message)
+        - name: image-url
+          value: $(params.image-url)
+        - name: build-id
+          value: $(tasks.generate-id.results.build-id)
+        - name: merge-title
+          value: $(params.merge-title)
+        - name: merge-description
+          value: $(params.merge-description)
+        - name: merge-date
+          value: $(params.merge-date)
+        - name: merge-commit-sha
+          value: $(params.git-revision)
+        - name: git-user
+          value: $(params.git-username)
+      workspaces:
+        - name: hro-redmine-config
+          workspace: hro-redmine-config
+    - name: update-gitops-prd
+      taskRef:
+        name: update-gitops
+      when:
+        - input: $(params.build-stage)
+          operator: in
+          values: [ "prd-deploy" ]
+      runAfter:
+        - notify-pipeline-start
+      params:
+        - name: gitops-revision
+          value: $(params.gitops-revision)
+        - name: deploy-manifest
+          value: $(params.deploy-manifest)
+        - name: gitops-path
+          value: $(params.gitops-path)
+        - name: gitops-url
+          value: $(params.gitops-url)
+        - name: rollout-strategy
+          value: $(params.rollout-strategy)
+        - name: image-url
+          value: $(params.image-url)
+        - name: build-id
+          value: $(params.build-id)
+      workspaces:
+        - name: gitops
+          workspace: gitops
+  finally:
+    - name: clean-workspace
+      taskRef:
+        name: clean-workspace
+      when:
+        - input: $(params.build-stage)
+          operator: notin
+          values: [ "prd-deploy" ]
+      params:
+        - name: subdirectory
+          value: $(params.clone-to-directory)
+      workspaces:
+        - name: output
+          workspace: source
+    - name: report-result
+      taskRef:
+        name: mm-send-result
+      params:
+        - name: pipeline-name
+          value: $(params.pipeline-name)
+        - name: git-username
+          value: $(params.git-username)
+        - name: CHANNEL_NAME
+          value: $(params.mm-channel)
+

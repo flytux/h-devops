@@ -1,0 +1,31 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: prd-app-core-hro-frontend-issue-pipeline-
+  labels:
+    app: devops
+    build-stage: prd
+spec:
+  serviceAccountName: sa-pipeline-runner
+  pipelineRef:
+          name: app-core-hro-frontend-issue
+  params:
+  - name: git-url
+    value: "https://gitlab.herosonsa.co.kr/app/core/hro-frontend.git"
+  - name: git-revision
+    value: "main"
+  - name: git-username
+    value: "tekton-dashboard"
+  - name: clone-to-directory
+    value: $(context.pipelineRun.name)
+  - name: pipeline-name
+    value: $(context.pipelineRun.name)
+  - name: mm-channel
+    value: "core:hro-frontend"
+  workspaces:
+  - name: source
+    persistentvolumeclaim:
+      claimName: pvc-app-core-hro-frontend
+
+
+

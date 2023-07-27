@@ -27,7 +27,7 @@ spec:
       type: string
       default: "image --exit-code 0"
     - name: TRIVY_IMAGE
-      default: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/aquasec/trivy:hero
+      default: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/aquasec/trivy:v0.2
       description: Trivy scanner image to be used
     - name: IMAGE
       description: Image or Path to be scanned by trivy.

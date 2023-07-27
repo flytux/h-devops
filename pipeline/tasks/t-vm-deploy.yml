@@ -14,11 +14,12 @@ spec:
     - name: remote-username
       default: "hroadm"
     - name: remote-port
-      default: "22"
+      default: "2122"
     - name: use-insecure-cipher
       default: "false"
     - name: image
     - name: container-name
+    - name: service-port
   steps:
     - name: remote-ssh-command
       image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/appleboy/drone-ssh:1.6.1
@@ -33,7 +34,7 @@ spec:
           podman login tbd5d1uh.private-ncr.fin-ntruss.com --username=$(cat ./registry-id) --password=$(cat ./registry-password)"
 
           export run="
-          podman run -d -p 8080:8080 -it --name $(params.container-name) $(params.image)
+          podman run -d -p $(params.service-port) -it --name $(params.container-name) $(params.image)
           podman image prune -a -f"
           
           cmd=""

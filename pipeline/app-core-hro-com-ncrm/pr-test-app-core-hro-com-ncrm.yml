@@ -2,6 +2,9 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   generateName: test-app-core-hro-com-ncrm-pipeline-
+  labels:
+    app: devops
+    build-stage: test
 spec:
   serviceAccountName: sa-pipeline-runner
   pipelineRef:
@@ -21,7 +24,7 @@ spec:
   - name: clone-to-directory
     value: $(context.pipelineRun.name)
   - name: image-url
-    value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/core/hro-com-ncrm"
+    value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/test/core/hro-com-ncrm"
 #  - name: argo-app-name
 #    value: "core-com-api-dev"
   - name: gitops-url

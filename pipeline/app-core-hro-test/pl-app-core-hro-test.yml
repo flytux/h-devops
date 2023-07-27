@@ -1,6 +1,8 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
+  labels:
+    app: devops
   name: app-core-hro-test
 spec:
   params:
@@ -10,28 +12,27 @@ spec:
     - name: git-username
     - name: clone-to-directory
     - name: image-url
-    - name: argo-app-name
+    - name: spring-profile
     - name: gitops-url
-    - name: argo-url
     - name: gitops-revision
     - name: gitops-path
     - name: deploy-manifest
     - name: sonar-project-key
     - name: rollout-strategy
-    - name: pipeline-name
+    - name: pipelinerun-name
     - name: mm-channel
   workspaces:
-    - name: source 
-    - name: gitops 
+    - name: source
+    - name: gitops
     - name: manifest-dir
   tasks:
     - name: notify-pipeline-start
       taskRef:
         name: mm-notify-start
       params:
-        - name: pipeline-name
-          value: $(params.pipeline-name)
-        - name: git-username
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
           value: $(params.git-username)
         - name: CHANNEL_NAME
           value: $(params.mm-channel)
@@ -79,6 +80,8 @@ spec:
           value: $(params.image-url):$(tasks.generate-id.results.build-id)
         - name: DIRECTORY
           value: $(params.clone-to-directory)
+        - name: spring-profile
+          value: $(params.spring-profile)
       workspaces:
         - name: source
           workspace: source
@@ -93,22 +96,22 @@ spec:
       workspaces:
         - name: manifest-dir
           workspace: manifest-dir
-    - name: update-deploy
+    - name: update-gitops
       taskRef:
-        name: update-deploy
+        name: update-gitops
       runAfter:
         - build-image
       params:
-        - name: argo-url
-          value: $(params.argo-url) 
+        #- name: argo-url
+        #  value: $(params.argo-url) 
         - name: gitops-revision
           value: $(params.gitops-revision)
         - name: deploy-manifest
           value: $(params.deploy-manifest)
         - name: gitops-path
           value: $(params.gitops-path)
-        - name: argo-app-name
-          value: $(params.argo-app-name)
+        #- name: argo-app-name
+        #  value: $(params.argo-app-name)
         - name: gitops-url
           value: $(params.gitops-url)
         - name: rollout-strategy
@@ -132,12 +135,11 @@ spec:
           workspace: source
     - name: report-result
       taskRef:
-        #name: print-result
         name: mm-send-result
       params:
-        - name: pipeline-name
-          value: $(params.pipeline-name)
-        - name: git-username
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
           value: $(params.git-username)
         - name: CHANNEL_NAME
           value: $(params.mm-channel)

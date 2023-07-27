@@ -1,0 +1,1526 @@
+apiVersion: v1
+data:
+  accounts.devops: apiKey,login
+  accounts.devops.enabled: "true"
+  oidc.config: |-
+    name: Keycloak
+    issuer: https://keycloak.herosonsa.co.kr/realms/devops
+    clientID: argocd
+    clientSecret: $oidc.keycloak.clientSecret
+    requestedScopes: ["openid", "profile", "email", "groups"]
+  url: https://argocd.herosonsa.co.kr
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"ConfigMap","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"argocd-cm","app.kubernetes.io/part-of":"argocd"},"name":"argocd-cm","namespace":"argo-system"}}
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+  name: argocd-cm
+---
+apiVersion: v1
+data:
+  policy.csv: |
+    g, devops, role:admin
+    g, ArgoCDAdmins, role:admin
+    g, ArgoCDUsers,  role:readonly
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"ConfigMap","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"argocd-rbac-cm","app.kubernetes.io/part-of":"argocd"},"name":"argocd-rbac-cm","namespace":"argo-system"}}
+  labels:
+    app.kubernetes.io/name: argocd-rbac-cm
+    app.kubernetes.io/part-of: argocd
+  name: argocd-rbac-cm
+---
+apiVersion: v1
+data:
+  ssh_known_hosts: |
+    bitbucket.org ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAubiN81eDcafrgMeLzaFPsw2kNvEcqTKl/VqLat/MaB33pZy0y3rJZtnqwR2qOOvbwKZYKiEO1O6VqNEBxKvJJelCq0dTXWT5pbO2gDXC6h6QDXCaHo6pOHGPUy+YBaGQRGuSusMEASYiWunYN0vCAI8QaXnWMXNMdFP3jHAJH0eDsoiGnLPBlBp4TNm6rYI74nMzgz3B9IikW4WVK+dc8KZJZWYjAuORU3jc1c/NPskD2ASinf8v3xnfXeukU0sJ5N6m5E8VLjObPEO+mN2t/FZTMZLiFqPWc/ALSqnMnnhwrNi2rbfg/rd/IpL8Le3pSBne8+seeFVBoGqzHM9yXw==
+    github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=
+    gitlab.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFSMqzJeV9rUzU4kWitGjeR4PWSa29SPqJ1fVkhtj3Hw9xjLVXVYrU9QlYWrOLXBpQ6KWjbjTDTdDkoohFzgbEY=
+    gitlab.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAfuCHKVTjquxvt6CM6tdG4SLp1Btn/nOeHHE5UOzRdf
+    gitlab.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCsj2bNKTBSpIYDEGk9KxsGh3mySTRgMtXL583qmBpzeQ+jqCMRgBqB98u3z++J1sKlXHWfM9dyhSevkMwSbhoR8XIq/U0tCNyokEi/ueaBMCvbcTHhO7FcwzY92WK4Yt0aGROY5qX2UKSeOvuP4D6TPqKF1onrSzH9bx9XUf2lEdWT/ia1NEKjunUqu1xOB/StKDHMoX4/OKyIzuS0q/T1zOATthvasJFoPrAjkohTyaDUz2LN5JoH839hViyEG82yB+MjcFV5MU3N1l1QL3cVUCh93xSaua1N85qivl+siMkPGbO5xR/En4iEY6K2XPASUEMaieWVNTRCtJ4S8H+9
+    ssh.dev.azure.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7Hr1oTWqNqOlzGJOfGJ4NakVyIzf1rXYd4d7wo6jBlkLvCA4odBlL0mDUyZ0/QUfTTqeu+tm22gOsv+VrVTMk6vwRU75gY/y9ut5Mb3bR5BV58dKXyq9A9UeB5Cakehn5Zgm6x1mKoVyf+FFn26iYqXJRgzIZZcZ5V6hrE0Qg39kZm4az48o0AUbf6Sp4SLdvnuMa2sVNwHBboS7EJkm57XQPVU3/QpyNLHbWDdzwtrlS+ez30S3AdYhLKEOxAG8weOnyrtLJAUen9mTkol8oII1edf7mWWbWVf0nBmly21+nZcmCTISQBtdcyPaEno7fFQMDD26/s0lfKob4Kw8H
+    vs-ssh.visualstudio.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7Hr1oTWqNqOlzGJOfGJ4NakVyIzf1rXYd4d7wo6jBlkLvCA4odBlL0mDUyZ0/QUfTTqeu+tm22gOsv+VrVTMk6vwRU75gY/y9ut5Mb3bR5BV58dKXyq9A9UeB5Cakehn5Zgm6x1mKoVyf+FFn26iYqXJRgzIZZcZ5V6hrE0Qg39kZm4az48o0AUbf6Sp4SLdvnuMa2sVNwHBboS7EJkm57XQPVU3/QpyNLHbWDdzwtrlS+ez30S3AdYhLKEOxAG8weOnyrtLJAUen9mTkol8oII1edf7mWWbWVf0nBmly21+nZcmCTISQBtdcyPaEno7fFQMDD26/s0lfKob4Kw8H
+    github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
+    github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"ssh_known_hosts":"bitbucket.org ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAubiN81eDcafrgMeLzaFPsw2kNvEcqTKl/VqLat/MaB33pZy0y3rJZtnqwR2qOOvbwKZYKiEO1O6VqNEBxKvJJelCq0dTXWT5pbO2gDXC6h6QDXCaHo6pOHGPUy+YBaGQRGuSusMEASYiWunYN0vCAI8QaXnWMXNMdFP3jHAJH0eDsoiGnLPBlBp4TNm6rYI74nMzgz3B9IikW4WVK+dc8KZJZWYjAuORU3jc1c/NPskD2ASinf8v3xnfXeukU0sJ5N6m5E8VLjObPEO+mN2t/FZTMZLiFqPWc/ALSqnMnnhwrNi2rbfg/rd/IpL8Le3pSBne8+seeFVBoGqzHM9yXw==\ngithub.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=\ngitlab.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFSMqzJeV9rUzU4kWitGjeR4PWSa29SPqJ1fVkhtj3Hw9xjLVXVYrU9QlYWrOLXBpQ6KWjbjTDTdDkoohFzgbEY=\ngitlab.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAfuCHKVTjquxvt6CM6tdG4SLp1Btn/nOeHHE5UOzRdf\ngitlab.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCsj2bNKTBSpIYDEGk9KxsGh3mySTRgMtXL583qmBpzeQ+jqCMRgBqB98u3z++J1sKlXHWfM9dyhSevkMwSbhoR8XIq/U0tCNyokEi/ueaBMCvbcTHhO7FcwzY92WK4Yt0aGROY5qX2UKSeOvuP4D6TPqKF1onrSzH9bx9XUf2lEdWT/ia1NEKjunUqu1xOB/StKDHMoX4/OKyIzuS0q/T1zOATthvasJFoPrAjkohTyaDUz2LN5JoH839hViyEG82yB+MjcFV5MU3N1l1QL3cVUCh93xSaua1N85qivl+siMkPGbO5xR/En4iEY6K2XPASUEMaieWVNTRCtJ4S8H+9\nssh.dev.azure.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7Hr1oTWqNqOlzGJOfGJ4NakVyIzf1rXYd4d7wo6jBlkLvCA4odBlL0mDUyZ0/QUfTTqeu+tm22gOsv+VrVTMk6vwRU75gY/y9ut5Mb3bR5BV58dKXyq9A9UeB5Cakehn5Zgm6x1mKoVyf+FFn26iYqXJRgzIZZcZ5V6hrE0Qg39kZm4az48o0AUbf6Sp4SLdvnuMa2sVNwHBboS7EJkm57XQPVU3/QpyNLHbWDdzwtrlS+ez30S3AdYhLKEOxAG8weOnyrtLJAUen9mTkol8oII1edf7mWWbWVf0nBmly21+nZcmCTISQBtdcyPaEno7fFQMDD26/s0lfKob4Kw8H\nvs-ssh.visualstudio.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7Hr1oTWqNqOlzGJOfGJ4NakVyIzf1rXYd4d7wo6jBlkLvCA4odBlL0mDUyZ0/QUfTTqeu+tm22gOsv+VrVTMk6vwRU75gY/y9ut5Mb3bR5BV58dKXyq9A9UeB5Cakehn5Zgm6x1mKoVyf+FFn26iYqXJRgzIZZcZ5V6hrE0Qg39kZm4az48o0AUbf6Sp4SLdvnuMa2sVNwHBboS7EJkm57XQPVU3/QpyNLHbWDdzwtrlS+ez30S3AdYhLKEOxAG8weOnyrtLJAUen9mTkol8oII1edf7mWWbWVf0nBmly21+nZcmCTISQBtdcyPaEno7fFQMDD26/s0lfKob4Kw8H\ngithub.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=\ngithub.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl\n"},"kind":"ConfigMap","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"argocd-ssh-known-hosts-cm","app.kubernetes.io/part-of":"argocd"},"name":"argocd-ssh-known-hosts-cm","namespace":"argo-system"}}
+  labels:
+    app.kubernetes.io/name: argocd-ssh-known-hosts-cm
+    app.kubernetes.io/part-of: argocd
+  name: argocd-ssh-known-hosts-cm
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"ConfigMap","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"argocd-tls-certs-cm","app.kubernetes.io/part-of":"argocd"},"name":"argocd-tls-certs-cm","namespace":"argo-system"}}
+  labels:
+    app.kubernetes.io/name: argocd-tls-certs-cm
+    app.kubernetes.io/part-of: argocd
+  name: argocd-tls-certs-cm
+---
+apiVersion: v1
+data:
+  accounts.devops.password: JDJhJDEwJGpZWFlELlBjcDZxc05jY01MT3dsT3V0NGlNdDNsaC5va09tU1ZJVWlBRWt3YjJMbzVpcy5l
+  accounts.devops.passwordMtime: MjAyMy0wNC0yMVQwOToyMzo1Nlo=
+  accounts.devops.tokens: W3siaWQiOiIxZTk3NWNjNS00MDQ0LTQ5NWQtODY1OS04MTU1ODk4NTgwNzUiLCJpYXQiOjE2ODIzOTQyMjB9XQ==
+  admin.password: JDJhJDEwJDRFMHhic2QxRS54LlV3WlUzUGZacGVXbW8wcUpvSkMxdkRYamdRN0taU3B6dUU2OU9QRThT
+  admin.passwordMtime: MjAyMy0wNC0yMVQwOToyNzoxNFo=
+  oidc.keycloak.clientSecret: VmpQeWJIS3JwNzZTZFRObnA3R1JyTjJzZzBMRUZLakQ=
+  server.secretkey: dnFNbHhkUDJKeXFKSHVaMFliNXlzRkVTT21udjdDOWVEMXR0YW00d1ozaz0=
+kind: Secret
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Secret","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"argocd-secret","app.kubernetes.io/part-of":"argocd"},"name":"argocd-secret","namespace":"argo-system"},"type":"Opaque"}
+  labels:
+    app.kubernetes.io/name: argocd-secret
+    app.kubernetes.io/part-of: argocd
+  name: argocd-secret
+type: Opaque
+---
+apiVersion: v1
+data:
+  config: eyJiZWFyZXJUb2tlbiI6ImV5SmhiR2NpT2lKU1V6STFOaUlzSW10cFpDSTZJbXBYU205bFdqa3RSM1ZJWVV0T1ZuZEJVVzg0T1Y5a2VVVm9UWGsyYURFeExXeE1jVlZ2YjBvMmVFRWlmUS5leUpwYzNNaU9pSnJkV0psY201bGRHVnpMM05sY25acFkyVmhZMk52ZFc1MElpd2lhM1ZpWlhKdVpYUmxjeTVwYnk5elpYSjJhV05sWVdOamIzVnVkQzl1WVcxbGMzQmhZMlVpT2lKcmRXSmxMWE41YzNSbGJTSXNJbXQxWW1WeWJtVjBaWE11YVc4dmMyVnlkbWxqWldGalkyOTFiblF2YzJWamNtVjBMbTVoYldVaU9pSmhjbWR2WTJRdGJXRnVZV2RsY2kxMGIydGxiaTFuT0RZM2RDSXNJbXQxWW1WeWJtVjBaWE11YVc4dmMyVnlkbWxqWldGalkyOTFiblF2YzJWeWRtbGpaUzFoWTJOdmRXNTBMbTVoYldVaU9pSmhjbWR2WTJRdGJXRnVZV2RsY2lJc0ltdDFZbVZ5Ym1WMFpYTXVhVzh2YzJWeWRtbGpaV0ZqWTI5MWJuUXZjMlZ5ZG1salpTMWhZMk52ZFc1MExuVnBaQ0k2SWpJNU9XWXdNamM0TFRKbU5HWXROR05tT1MwNE5UWTNMV0l3Wm1Fd09HTTFNelExT0NJc0luTjFZaUk2SW5ONWMzUmxiVHB6WlhKMmFXTmxZV05qYjNWdWREcHJkV0psTFhONWMzUmxiVHBoY21kdlkyUXRiV0Z1WVdkbGNpSjkuTFd5d0F1Wi1ueG5lS2FiR3U2Y3dxRE1lRHZ0WkNkMThTa1VLdk1SbHZodG1nbjIzRHhLbDAwS0ZLbGNRakFObFRVdFB5Z0tHTXhqY0hUeXZrVjRxd18zV0VUMFlvSlhkUGl4RU0zZnRTVjBjZFB1dnloTjFwLUhmUzlZalAzSGQwOE02akF4eHdwUWVtQ09UZUotU2JJTlBGSGlWeUpPUWhFUTh5RmpGdFhpZVVtYUU0UldHTHkzaHljbXU3U1hXaWo2bFM2UDlkYzFwMmEwanByX0VrYUo1LTNHQmhCaXg4ZnFmeDE3TXFZWkxURVRsMDFTREJxT1FTdTF3RFVmczlJLWJlSzJhU3I5dDVsRkdsdDJrVmdhLWlPLXRkNUhLc0pLOUtxTHViMjk5TlE0ZG5PM3Noandab1lJRVpOX2lRVXRzTmxNWk15dWZURFRQbG44TDF3IiwidGxzQ2xpZW50Q29uZmlnIjp7Imluc2VjdXJlIjpmYWxzZSwiY2FEYXRhIjoiTFMwdExTMUNSVWRKVGlCRFJWSlVTVVpKUTBGVVJTMHRMUzB0Q2sxSlNVTTJWRU5EUVdSSFowRjNTVUpCWjBsQ1FVUkJUa0puYTNGb2EybEhPWGN3UWtGUmMwWkJSRUZXVFZKTmQwVlJXVVJXVVZGRVJYZHdjbVJYU213S1kyMDFiR1JIVm5wTlEwRllSRlJKZWsxRVdYaE9ha0Y0VGxSWmVFNXNiMWxFZWtsNFRXcE5kMDVVU1hwTlJFVXhUbXBGTWxkcVFWWk5VazEzUlZGWlJBcFdVVkZFUlhkd2NtUlhTbXhqYlRWc1pFZFdlazFKU1VKSmFrRk9RbWRyY1docmFVYzVkekJDUVZGRlJrRkJUME5CVVRoQlRVbEpRa05uUzBOQlVVVkJDbk4wUjNRMlZYTlhRWEpRSzNJMFlsQnVUakpZYUZoWVoyRlhka3RxZW1JeldXUmlRMnh0Y0VzM1ZXNVhUV3RPVDNKV1NHRlZjMmhOVG1rM2VWRm5XVWdLT1dGckswRmpjVnBLV0RaVmRub3lSR2RqVG1nMVZYcG5hMmRQYW05WFIyWTNiRVpOUTFGUGQwbzFXakF5ZFhwSk1uUkVhalkxTlhKT05FRXlMMEowU1FwaVNWSjJTMncyVlZnMWJWWTVhekJPTkZSbE1FZHFUMFU1U0hGa01YTnJObXR2TldWVVprUkJlSFZyUlhaTlJEZ3JTR1Y2Y1ZsS01HOUtVbGhVVjJnd0NuTjNiemMxWVRSRFQweHdWWFpoVGxvdlVrRm1VSFV5Wm1SV1Vsb3hkbTFTYW1KUWEzUnhOSFJLVkU5T2JERlJjemhQU2xad1kyMUtTamh5WkhsTk0wTUtPSGs1YVZwTlMyaGhiMU5IUW1GaU9IQjZSMWRrYVhONFdUQnBTSGRwVVdSaU1IaDRUWFpuY1RRMmIyeEVhbVV6VFM5d1EzYzBiSEJrZEhWU05tTnJNQXBFU1d0NmNYQkpjbTlOWkZKNlJqTkZaSEpYVFhKUlNVUkJVVUZDYnpCSmQxRkVRVTlDWjA1V1NGRTRRa0ZtT0VWQ1FVMURRWEZSZDBSM1dVUldVakJVQ2tGUlNDOUNRVlYzUVhkRlFpOTZRV1JDWjA1V1NGRTBSVVpuVVZWalN6TTBZVk5YYWpWNFptaE5ZVWxsVW14VmRreE5aall4WVRoM1JGRlpTa3R2V2trS2FIWmpUa0ZSUlV4Q1VVRkVaMmRGUWtGTFptWmhiMnBOWnpOQmVYQlNVMUoxUlcxTk5qaHlRWFp3VG5sNFZEVXJVemhLUVRoQlVuUjRUakIyU0UxdU5BcDFNMWswVURkMWNHbGhUMGhUV1ZGNWMzTTJRWFpSUWxkcWNteFpRVGg0U1dGdlRHNUpZemxWVTFWbWVHMUdWa2M0UVUxdmNteFFObXBrYW14Q0swWjZDa2M0UkcxRFJYaENVM2hXSzJ4RFJraDRWV1pVUm1SaFoxZFhZbTEwVGl0TFpURjRXVXBHVWxFME4yWnBOV2gzWTJKc1ZURjJLMWhYUkZoak5rRnFjR2dLVUdaU1NIZHpNMnR2WXpaU2J5dG9NMWg1VkRWVlRFbDNVbGd4YlVjM05VNWFSVTR3Vm0xcFJ6QnNaMWRWWlU5WldTOW1lV1pJTTJsQ1RqWTJPRGhKYXdvMVRHWjJkMlF4YXpCQ2JXaE9LMU4yVFdGeVFWSTFUbFJWVmt4eWJFeGhSVnB5UldOUmJGTm9RemxIYUZOelFpdHlaMU5RUWpGWlQzaHRORVZQZFVVeUNrcEdTVUZsV0hOWFpuRXJNMmQ1Ym1aR1ZFMUNhVXBYU1dWdWN6VmFlSHBzTDJWaFFrRnNZejBLTFMwdExTMUZUa1FnUTBWU1ZFbEdTVU5CVkVVdExTMHRMUW89In19
+  name: aGVyby1wcmQ=
+  server: aHR0cHM6Ly9lMTVlNmM3NS1kOGQxLTQ5NGYtOTIwMC1iNDllZTZmYWZjODguZmtyLm5rcy5maW4tbnRydXNzLmNvbQ==
+kind: Secret
+metadata:
+  annotations:
+    managed-by: argocd.argoproj.io
+  labels:
+    argocd.argoproj.io/secret-type: cluster
+    stage: prd
+  name: cluster-e15e6c75-d8d1-494f-9200-b49ee6fafc88.fkr.nks.fin-ntruss.com-35737866
+type: Opaque
+---
+apiVersion: v1
+data:
+  config: eyJ0bHNDbGllbnRDb25maWciOnsiaW5zZWN1cmUiOmZhbHNlfX0=
+  name: ZGV2LWNsdXN0ZXI=
+  server: aHR0cHM6Ly9rdWJlcm5ldGVzLmRlZmF1bHQuc3Zj
+kind: Secret
+metadata:
+  annotations:
+    argocd.argoproj.io/refresh: "2023-06-21T06:23:07Z"
+    managed-by: argocd.argoproj.io
+  labels:
+    argocd.argoproj.io/secret-type: cluster
+    stage: dev
+  name: cluster-kubernetes.default.svc-3396314289
+type: Opaque
+---
+apiVersion: v1
+data:
+  password: SGVyb3NvbnNhMTIhQA==
+  project: aHJvLWFwcHM=
+  type: Z2l0
+  url: aHR0cHM6Ly9oZWxsby0zMDMxODE4LmRldnRvb2xzLmZpbi1uY2xvdWQuY29tLzMwMzE4MTgvaHJvLWFwcHMtcmVwb3NpdG9yeS5naXQ=
+  username: ZGV2b3BzQGhlcm9zb25zYS5jby5rcg==
+kind: Secret
+metadata:
+  annotations:
+    managed-by: argocd.argoproj.io
+  labels:
+    argocd.argoproj.io/secret-type: repository
+  name: repo-1636070310
+type: Opaque
+---
+apiVersion: v1
+data:
+  password: SGVyb3NvbnNhMTIhQA==
+  project: aHJvLXRlc3Q=
+  type: Z2l0
+  url: aHR0cHM6Ly9oZWxsby0zMDMxODE4LmRldnRvb2xzLmZpbi1uY2xvdWQuY29tLzMwMzE4MTgvYXBwLWNvcmUtaHJvLXRlc3QuZ2l0
+  username: ZGV2b3BzQGhlcm9zb25zYS5jby5rcg==
+kind: Secret
+metadata:
+  annotations:
+    managed-by: argocd.argoproj.io
+  labels:
+    argocd.argoproj.io/secret-type: repository
+  name: repo-1910615701
+type: Opaque
+---
+apiVersion: v1
+data:
+  password: SGVyb3NvbnNhMTIhQA==
+  project: aHJvLXRlc3Q=
+  type: Z2l0
+  url: aHR0cHM6Ly9oZWxsby0zMDMxODE4LmRldnRvb2xzLmZpbi1uY2xvdWQuY29tLzMwMzE4MTgvYXBwLWNvcmUtY29yZS1mcm9udC10ZXN0LmdpdA==
+  username: ZGV2b3BzQGhlcm9zb25zYS5jby5rcg==
+kind: Secret
+metadata:
+  annotations:
+    managed-by: argocd.argoproj.io
+  labels:
+    argocd.argoproj.io/secret-type: repository
+  name: repo-2558941369
+type: Opaque
+---
+apiVersion: v1
+data:
+  password: SGVyb3NvbnNhMTIhQA==
+  project: aHJvLXRlc3Q=
+  type: Z2l0
+  url: aHR0cHM6Ly9oZWxsby0zMDMxODE4LmRldnRvb2xzLmZpbi1uY2xvdWQuY29tLzMwMzE4MTgvaHJvLWFwcHMtbWF2ZW4tc2FtcGxlLWRlcGxveS5naXQ=
+  username: ZGV2b3BzQGhlcm9zb25zYS5jby5rcg==
+kind: Secret
+metadata:
+  annotations:
+    managed-by: argocd.argoproj.io
+  labels:
+    argocd.argoproj.io/secret-type: repository
+  name: repo-299765898
+type: Opaque
+---
+apiVersion: v1
+data:
+  password: SGVyb3NvbnNhMTIhQA==
+  project: aHJvLXRlc3Q=
+  type: Z2l0
+  url: aHR0cHM6Ly9oZWxsby0zMDMxODE4LmRldnRvb2xzLmZpbi1uY2xvdWQuY29tLzMwMzE4MTgvaHJvLWFwcHMtd2ViLXNhbXBsZS1kZXBsb3kuZ2l0
+  username: ZGV2b3BzQGhlcm9zb25zYS5jby5rcg==
+kind: Secret
+metadata:
+  annotations:
+    managed-by: argocd.argoproj.io
+  labels:
+    argocd.argoproj.io/secret-type: repository
+  name: repo-4242295923
+type: Opaque
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: hro-apps
+spec:
+  destinations:
+  - name: '*'
+    namespace: '*'
+    server: https://kubernetes.default.svc
+status: {}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"core-ccm-api-dev","namespace":"argo-system"},"spec":{"destination":{"name":"dev-cluster","namespace":"ns-app-core-dev"},"project":"hro-apps","source":{"path":"app/core/hro-ccm-backend/dev","repoURL":"https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git","targetRevision":"dev"},"syncPolicy":{"automated":{}}}}
+  name: core-ccm-api-dev
+spec:
+  destination:
+    name: dev-cluster
+    namespace: ns-app-core-dev
+  project: hro-apps
+  source:
+    path: app/core/hro-ccm-backend/dev
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+    targetRevision: dev
+  syncPolicy:
+    automated: {}
+status:
+  health:
+    status: Degraded
+  reconciledAt: "2023-07-10T00:51:37Z"
+  resources:
+  - health:
+      status: Healthy
+    kind: Service
+    name: core-ccm-api-svc-dev
+    namespace: ns-app-core-dev
+    status: Synced
+    version: v1
+  - group: argoproj.io
+    health:
+      message: 'ProgressDeadlineExceeded: ReplicaSet "core-ccm-api-dev-6df67494dd"
+        has timed out progressing.'
+      status: Degraded
+    kind: Rollout
+    name: core-ccm-api-dev
+    namespace: ns-app-core-dev
+    status: Synced
+    version: v1alpha1
+  sourceType: Kustomize
+  summary:
+    images:
+    - docker.io/istio/proxyv2:1.17.2
+    - tbd5d1uh.private-ncr.fin-ntruss.com/app/dev/core/hro-ccm-backend:dev-230707-180704-d1e4873d
+    - tbd5d1uh.private-ncr.fin-ntruss.com/app/dev/core/hro-ccm-backend:dev-230710-075039-4cc723bb
+    - tbd5d1uh.private-ncr.fin-ntruss.com/busybox:latest
+  sync:
+    comparedTo:
+      destination:
+        name: dev-cluster
+        namespace: ns-app-core-dev
+      source:
+        path: app/core/hro-ccm-backend/dev
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: dev
+    revision: 8664ddeeba01613ddd93f69789bbd29b0b70a43a
+    status: Synced
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"core-ccm-api-test","namespace":"argo-system"},"spec":{"destination":{"name":"dev-cluster","namespace":"ns-app-core-test"},"project":"hro-apps","source":{"path":"app/core/hro-ccm-backend/test","repoURL":"https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git","targetRevision":"test"},"syncPolicy":{"automated":{}}}}
+  name: core-ccm-api-test
+spec:
+  destination:
+    name: dev-cluster
+    namespace: ns-app-core-test
+  project: hro-apps
+  source:
+    path: app/core/hro-ccm-backend/test
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+    targetRevision: test
+  syncPolicy:
+    automated: {}
+status:
+  conditions:
+  - lastTransitionTime: "2023-07-10T00:21:50Z"
+    message: 'Failed sync attempt to 854159346c4c4288a5e9f091fa5cf0d3b339c110: one
+      or more objects failed to apply (dry run) (retried 5 times).'
+    type: SyncError
+  health:
+    status: Healthy
+  operationState:
+    finishedAt: "2023-07-10T00:21:49Z"
+    message: one or more objects failed to apply (dry run) (retried 5 times).
+    operation:
+      initiatedBy:
+        automated: true
+      retry:
+        limit: 5
+      sync:
+        revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+    phase: Failed
+    retryCount: 5
+    startedAt: "2023-07-10T00:16:31Z"
+    syncResult:
+      resources:
+      - group: ""
+        hookPhase: Failed
+        kind: Service
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "/v1, Resource=services", GroupVersionKind: "/v1, Kind=Service"
+          Name: "core-ccm-api-svc-test", Namespace: "ns-app-core-test"
+          from server for: "/dev/shm/3578024888": services "core-ccm-api-svc-test" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "services" in API group "" in the namespace "ns-app-core-test"
+        name: core-ccm-api-svc-test
+        namespace: ns-app-core-test
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1
+      - group: argoproj.io
+        hookPhase: Failed
+        kind: Rollout
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "argoproj.io/v1alpha1, Resource=rollouts", GroupVersionKind: "argoproj.io/v1alpha1, Kind=Rollout"
+          Name: "core-ccm-api-test", Namespace: "ns-app-core-test"
+          from server for: "/dev/shm/2493368185": rollouts.argoproj.io "core-ccm-api-test" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "rollouts" in API group "argoproj.io" in the namespace "ns-app-core-test"
+        name: core-ccm-api-test
+        namespace: ns-app-core-test
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1alpha1
+      revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+      source:
+        path: app/core/hro-ccm-backend/test
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: test
+  reconciledAt: "2023-07-10T00:51:37Z"
+  resources:
+  - health:
+      status: Healthy
+    kind: Service
+    name: core-ccm-api-svc-test
+    namespace: ns-app-core-test
+    status: Synced
+    version: v1
+  - group: argoproj.io
+    health:
+      status: Missing
+    kind: Rollout
+    name: core-ccm-api-test
+    namespace: ns-app-core-test
+    status: OutOfSync
+    version: v1alpha1
+  sourceType: Kustomize
+  summary: {}
+  sync:
+    comparedTo:
+      destination:
+        name: dev-cluster
+        namespace: ns-app-core-test
+      source:
+        path: app/core/hro-ccm-backend/test
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: test
+    revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+    status: OutOfSync
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"core-ccm-batch-dev","namespace":"argo-system"},"spec":{"destination":{"name":"dev-cluster","namespace":"ns-app-core-dev"},"project":"hro-apps","source":{"path":"app/core/hro-ccm-batch/dev","repoURL":"https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git","targetRevision":"dev"},"syncPolicy":{"automated":{}}}}
+  name: core-ccm-batch-dev
+spec:
+  destination:
+    name: dev-cluster
+    namespace: ns-app-core-dev
+  project: hro-apps
+  source:
+    path: app/core/hro-ccm-batch/dev
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+    targetRevision: dev
+  syncPolicy:
+    automated: {}
+status:
+  conditions:
+  - lastTransitionTime: "2023-07-10T00:50:56Z"
+    message: 'Failed sync attempt to 8664ddeeba01613ddd93f69789bbd29b0b70a43a: one
+      or more objects failed to apply (dry run) (retried 5 times).'
+    type: SyncError
+  health:
+    status: Healthy
+  operationState:
+    finishedAt: "2023-07-10T00:50:56Z"
+    message: one or more objects failed to apply (dry run) (retried 5 times).
+    operation:
+      initiatedBy:
+        automated: true
+      retry:
+        limit: 5
+      sync:
+        revision: 8664ddeeba01613ddd93f69789bbd29b0b70a43a
+    phase: Failed
+    retryCount: 5
+    startedAt: "2023-07-10T00:45:39Z"
+    syncResult:
+      resources:
+      - group: ""
+        hookPhase: Failed
+        kind: Service
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "/v1, Resource=services", GroupVersionKind: "/v1, Kind=Service"
+          Name: "core-ccm-batch-svc-dev", Namespace: "ns-app-core-dev"
+          from server for: "/dev/shm/1577035559": services "core-ccm-batch-svc-dev" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "services" in API group "" in the namespace "ns-app-core-dev"
+        name: core-ccm-batch-svc-dev
+        namespace: ns-app-core-dev
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1
+      - group: argoproj.io
+        hookPhase: Failed
+        kind: Rollout
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "argoproj.io/v1alpha1, Resource=rollouts", GroupVersionKind: "argoproj.io/v1alpha1, Kind=Rollout"
+          Name: "core-ccm-batch-dev", Namespace: "ns-app-core-dev"
+          from server for: "/dev/shm/2255999241": rollouts.argoproj.io "core-ccm-batch-dev" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "rollouts" in API group "argoproj.io" in the namespace "ns-app-core-dev"
+        name: core-ccm-batch-dev
+        namespace: ns-app-core-dev
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1alpha1
+      revision: 8664ddeeba01613ddd93f69789bbd29b0b70a43a
+      source:
+        path: app/core/hro-ccm-batch/dev
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: dev
+  reconciledAt: "2023-07-10T00:50:56Z"
+  resources:
+  - health:
+      status: Healthy
+    kind: Service
+    name: core-ccm-batch-svc-dev
+    namespace: ns-app-core-dev
+    status: OutOfSync
+    version: v1
+  - group: argoproj.io
+    health:
+      status: Missing
+    kind: Rollout
+    name: core-ccm-batch-dev
+    namespace: ns-app-core-dev
+    status: OutOfSync
+    version: v1alpha1
+  sourceType: Kustomize
+  summary: {}
+  sync:
+    comparedTo:
+      destination:
+        name: dev-cluster
+        namespace: ns-app-core-dev
+      source:
+        path: app/core/hro-ccm-batch/dev
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: dev
+    revision: 8664ddeeba01613ddd93f69789bbd29b0b70a43a
+    status: OutOfSync
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"core-ccm-batch-test","namespace":"argo-system"},"spec":{"destination":{"name":"dev-cluster","namespace":"ns-app-core-test"},"project":"hro-apps","source":{"path":"app/core/hro-ccm-batch/test","repoURL":"https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git","targetRevision":"test"},"syncPolicy":{"automated":{}}}}
+  name: core-ccm-batch-test
+spec:
+  destination:
+    name: dev-cluster
+    namespace: ns-app-core-test
+  project: hro-apps
+  source:
+    path: app/core/hro-ccm-batch/test
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+    targetRevision: test
+  syncPolicy:
+    automated: {}
+status:
+  conditions:
+  - lastTransitionTime: "2023-07-10T00:21:49Z"
+    message: 'Failed sync attempt to 854159346c4c4288a5e9f091fa5cf0d3b339c110: one
+      or more objects failed to apply (dry run) (retried 5 times).'
+    type: SyncError
+  health:
+    status: Healthy
+  operationState:
+    finishedAt: "2023-07-10T00:21:49Z"
+    message: one or more objects failed to apply (dry run) (retried 5 times).
+    operation:
+      initiatedBy:
+        automated: true
+      retry:
+        limit: 5
+      sync:
+        revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+    phase: Failed
+    retryCount: 5
+    startedAt: "2023-07-10T00:16:31Z"
+    syncResult:
+      resources:
+      - group: ""
+        hookPhase: Failed
+        kind: Service
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "/v1, Resource=services", GroupVersionKind: "/v1, Kind=Service"
+          Name: "core-ccm-batch-svc-test", Namespace: "ns-app-core-test"
+          from server for: "/dev/shm/3860081160": services "core-ccm-batch-svc-test" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "services" in API group "" in the namespace "ns-app-core-test"
+        name: core-ccm-batch-svc-test
+        namespace: ns-app-core-test
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1
+      - group: argoproj.io
+        hookPhase: Failed
+        kind: Rollout
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "argoproj.io/v1alpha1, Resource=rollouts", GroupVersionKind: "argoproj.io/v1alpha1, Kind=Rollout"
+          Name: "core-ccm-batch-test", Namespace: "ns-app-core-test"
+          from server for: "/dev/shm/3357731054": rollouts.argoproj.io "core-ccm-batch-test" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "rollouts" in API group "argoproj.io" in the namespace "ns-app-core-test"
+        name: core-ccm-batch-test
+        namespace: ns-app-core-test
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1alpha1
+      revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+      source:
+        path: app/core/hro-ccm-batch/test
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: test
+  reconciledAt: "2023-07-10T00:51:37Z"
+  resources:
+  - health:
+      status: Healthy
+    kind: Service
+    name: core-ccm-batch-svc-test
+    namespace: ns-app-core-test
+    status: Synced
+    version: v1
+  - group: argoproj.io
+    health:
+      status: Missing
+    kind: Rollout
+    name: core-ccm-batch-test
+    namespace: ns-app-core-test
+    status: OutOfSync
+    version: v1alpha1
+  sourceType: Kustomize
+  summary: {}
+  sync:
+    comparedTo:
+      destination:
+        name: dev-cluster
+        namespace: ns-app-core-test
+      source:
+        path: app/core/hro-ccm-batch/test
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: test
+    revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+    status: OutOfSync
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"core-com-api-dev","namespace":"argo-system"},"spec":{"destination":{"name":"dev-cluster","namespace":"ns-app-core-dev"},"project":"hro-apps","source":{"path":"app/core/hro-com-backend/dev","repoURL":"https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git","targetRevision":"dev"},"syncPolicy":{"automated":{}}}}
+  name: core-com-api-dev
+spec:
+  destination:
+    name: dev-cluster
+    namespace: ns-app-core-dev
+  project: hro-apps
+  source:
+    path: app/core/hro-com-backend/dev
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+    targetRevision: dev
+  syncPolicy:
+    automated: {}
+status:
+  conditions:
+  - lastTransitionTime: "2023-07-10T00:50:56Z"
+    message: 'Failed sync attempt to 8664ddeeba01613ddd93f69789bbd29b0b70a43a: one
+      or more objects failed to apply (dry run) (retried 5 times).'
+    type: SyncError
+  health:
+    status: Degraded
+  operationState:
+    finishedAt: "2023-07-10T00:50:56Z"
+    message: one or more objects failed to apply (dry run) (retried 5 times).
+    operation:
+      initiatedBy:
+        automated: true
+      retry:
+        limit: 5
+      sync:
+        revision: 8664ddeeba01613ddd93f69789bbd29b0b70a43a
+    phase: Failed
+    retryCount: 5
+    startedAt: "2023-07-10T00:45:38Z"
+    syncResult:
+      resources:
+      - group: ""
+        hookPhase: Failed
+        kind: Service
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "/v1, Resource=services", GroupVersionKind: "/v1, Kind=Service"
+          Name: "core-com-api-svc-dev", Namespace: "ns-app-core-dev"
+          from server for: "/dev/shm/3458018724": services "core-com-api-svc-dev" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "services" in API group "" in the namespace "ns-app-core-dev"
+        name: core-com-api-svc-dev
+        namespace: ns-app-core-dev
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1
+      - group: argoproj.io
+        hookPhase: Failed
+        kind: Rollout
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "argoproj.io/v1alpha1, Resource=rollouts", GroupVersionKind: "argoproj.io/v1alpha1, Kind=Rollout"
+          Name: "core-com-api-dev", Namespace: "ns-app-core-dev"
+          from server for: "/dev/shm/1735145788": rollouts.argoproj.io "core-com-api-dev" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "rollouts" in API group "argoproj.io" in the namespace "ns-app-core-dev"
+        name: core-com-api-dev
+        namespace: ns-app-core-dev
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1alpha1
+      revision: 8664ddeeba01613ddd93f69789bbd29b0b70a43a
+      source:
+        path: app/core/hro-com-backend/dev
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: dev
+  reconciledAt: "2023-07-10T00:50:56Z"
+  resources:
+  - health:
+      status: Healthy
+    kind: Service
+    name: core-com-api-svc-dev
+    namespace: ns-app-core-dev
+    status: Synced
+    version: v1
+  - group: argoproj.io
+    health:
+      message: 'ProgressDeadlineExceeded: ReplicaSet "core-com-api-dev-5459956764"
+        has timed out progressing.'
+      status: Degraded
+    kind: Rollout
+    name: core-com-api-dev
+    namespace: ns-app-core-dev
+    status: OutOfSync
+    version: v1alpha1
+  sourceType: Kustomize
+  summary:
+    images:
+    - docker.io/istio/proxyv2:1.17.2
+    - tbd5d1uh.private-ncr.fin-ntruss.com/app/dev/core/hro-com-backend:dev-230707-184421-03bcb145
+    - tbd5d1uh.private-ncr.fin-ntruss.com/app/dev/core/hro-com-backend:dev-230710-075020-eba20e05
+    - tbd5d1uh.private-ncr.fin-ntruss.com/busybox:latest
+  sync:
+    comparedTo:
+      destination:
+        name: dev-cluster
+        namespace: ns-app-core-dev
+      source:
+        path: app/core/hro-com-backend/dev
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: dev
+    revision: 8664ddeeba01613ddd93f69789bbd29b0b70a43a
+    status: OutOfSync
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"core-com-api-test","namespace":"argo-system"},"spec":{"destination":{"name":"dev-cluster","namespace":"ns-app-core-test"},"project":"hro-apps","source":{"path":"app/core/hro-com-backend/test","repoURL":"https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git","targetRevision":"test"},"syncPolicy":{"automated":{}}}}
+  name: core-com-api-test
+spec:
+  destination:
+    name: dev-cluster
+    namespace: ns-app-core-test
+  project: hro-apps
+  source:
+    path: app/core/hro-com-backend/test
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+    targetRevision: test
+  syncPolicy:
+    automated: {}
+status:
+  conditions:
+  - lastTransitionTime: "2023-07-10T00:21:50Z"
+    message: 'Failed sync attempt to 854159346c4c4288a5e9f091fa5cf0d3b339c110: one
+      or more objects failed to apply (dry run) (retried 5 times).'
+    type: SyncError
+  health:
+    status: Healthy
+  operationState:
+    finishedAt: "2023-07-10T00:21:50Z"
+    message: one or more objects failed to apply (dry run) (retried 5 times).
+    operation:
+      initiatedBy:
+        automated: true
+      retry:
+        limit: 5
+      sync:
+        revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+    phase: Failed
+    retryCount: 5
+    startedAt: "2023-07-10T00:16:31Z"
+    syncResult:
+      resources:
+      - group: ""
+        hookPhase: Failed
+        kind: Service
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "/v1, Resource=services", GroupVersionKind: "/v1, Kind=Service"
+          Name: "core-com-api-svc-test", Namespace: "ns-app-core-test"
+          from server for: "/dev/shm/618046391": services "core-com-api-svc-test" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "services" in API group "" in the namespace "ns-app-core-test"
+        name: core-com-api-svc-test
+        namespace: ns-app-core-test
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1
+      - group: argoproj.io
+        hookPhase: Failed
+        kind: Rollout
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "argoproj.io/v1alpha1, Resource=rollouts", GroupVersionKind: "argoproj.io/v1alpha1, Kind=Rollout"
+          Name: "core-com-api-test", Namespace: "ns-app-core-test"
+          from server for: "/dev/shm/3922383479": rollouts.argoproj.io "core-com-api-test" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "rollouts" in API group "argoproj.io" in the namespace "ns-app-core-test"
+        name: core-com-api-test
+        namespace: ns-app-core-test
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1alpha1
+      revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+      source:
+        path: app/core/hro-com-backend/test
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: test
+  reconciledAt: "2023-07-10T00:51:37Z"
+  resources:
+  - health:
+      status: Healthy
+    kind: Service
+    name: core-com-api-svc-test
+    namespace: ns-app-core-test
+    status: Synced
+    version: v1
+  - group: argoproj.io
+    health:
+      status: Missing
+    kind: Rollout
+    name: core-com-api-test
+    namespace: ns-app-core-test
+    status: OutOfSync
+    version: v1alpha1
+  sourceType: Kustomize
+  summary: {}
+  sync:
+    comparedTo:
+      destination:
+        name: dev-cluster
+        namespace: ns-app-core-test
+      source:
+        path: app/core/hro-com-backend/test
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: test
+    revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+    status: OutOfSync
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"core-com-batch-dev","namespace":"argo-system"},"spec":{"destination":{"name":"dev-cluster","namespace":"ns-app-core-dev"},"project":"hro-apps","source":{"path":"app/core/hro-com-batch/dev","repoURL":"https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git","targetRevision":"dev"},"syncPolicy":{"automated":{}}}}
+  name: core-com-batch-dev
+spec:
+  destination:
+    name: dev-cluster
+    namespace: ns-app-core-dev
+  project: hro-apps
+  source:
+    path: app/core/hro-com-batch/dev
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+    targetRevision: dev
+  syncPolicy:
+    automated: {}
+status:
+  conditions:
+  - lastTransitionTime: "2023-07-10T00:50:56Z"
+    message: 'Failed sync attempt to 8664ddeeba01613ddd93f69789bbd29b0b70a43a: one
+      or more objects failed to apply (dry run) (retried 5 times).'
+    type: SyncError
+  health:
+    status: Healthy
+  operationState:
+    finishedAt: "2023-07-10T00:50:56Z"
+    message: one or more objects failed to apply (dry run) (retried 5 times).
+    operation:
+      initiatedBy:
+        automated: true
+      retry:
+        limit: 5
+      sync:
+        revision: 8664ddeeba01613ddd93f69789bbd29b0b70a43a
+    phase: Failed
+    retryCount: 5
+    startedAt: "2023-07-10T00:45:39Z"
+    syncResult:
+      resources:
+      - group: ""
+        hookPhase: Failed
+        kind: Service
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "/v1, Resource=services", GroupVersionKind: "/v1, Kind=Service"
+          Name: "core-com-batch-svc-dev", Namespace: "ns-app-core-dev"
+          from server for: "/dev/shm/2229306404": services "core-com-batch-svc-dev" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "services" in API group "" in the namespace "ns-app-core-dev"
+        name: core-com-batch-svc-dev
+        namespace: ns-app-core-dev
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1
+      - group: argoproj.io
+        hookPhase: Failed
+        kind: Rollout
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "argoproj.io/v1alpha1, Resource=rollouts", GroupVersionKind: "argoproj.io/v1alpha1, Kind=Rollout"
+          Name: "core-com-batch-dev", Namespace: "ns-app-core-dev"
+          from server for: "/dev/shm/1989198289": rollouts.argoproj.io "core-com-batch-dev" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "rollouts" in API group "argoproj.io" in the namespace "ns-app-core-dev"
+        name: core-com-batch-dev
+        namespace: ns-app-core-dev
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1alpha1
+      revision: 8664ddeeba01613ddd93f69789bbd29b0b70a43a
+      source:
+        path: app/core/hro-com-batch/dev
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: dev
+  reconciledAt: "2023-07-10T00:50:56Z"
+  resources:
+  - health:
+      status: Healthy
+    kind: Service
+    name: core-com-batch-svc-dev
+    namespace: ns-app-core-dev
+    status: OutOfSync
+    version: v1
+  - group: argoproj.io
+    health:
+      status: Missing
+    kind: Rollout
+    name: core-com-batch-dev
+    namespace: ns-app-core-dev
+    status: OutOfSync
+    version: v1alpha1
+  sourceType: Kustomize
+  summary: {}
+  sync:
+    comparedTo:
+      destination:
+        name: dev-cluster
+        namespace: ns-app-core-dev
+      source:
+        path: app/core/hro-com-batch/dev
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: dev
+    revision: 8664ddeeba01613ddd93f69789bbd29b0b70a43a
+    status: OutOfSync
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"core-com-batch-test","namespace":"argo-system"},"spec":{"destination":{"name":"dev-cluster","namespace":"ns-app-core-test"},"project":"hro-apps","source":{"path":"app/core/hro-com-batch/test","repoURL":"https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git","targetRevision":"test"},"syncPolicy":{"automated":{}}}}
+  name: core-com-batch-test
+spec:
+  destination:
+    name: dev-cluster
+    namespace: ns-app-core-test
+  project: hro-apps
+  source:
+    path: app/core/hro-com-batch/test
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+    targetRevision: test
+  syncPolicy:
+    automated: {}
+status:
+  conditions:
+  - lastTransitionTime: "2023-07-10T00:21:50Z"
+    message: 'Failed sync attempt to 854159346c4c4288a5e9f091fa5cf0d3b339c110: one
+      or more objects failed to apply (dry run) (retried 5 times).'
+    type: SyncError
+  health:
+    status: Healthy
+  operationState:
+    finishedAt: "2023-07-10T00:21:50Z"
+    message: one or more objects failed to apply (dry run) (retried 5 times).
+    operation:
+      initiatedBy:
+        automated: true
+      retry:
+        limit: 5
+      sync:
+        revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+    phase: Failed
+    retryCount: 5
+    startedAt: "2023-07-10T00:16:31Z"
+    syncResult:
+      resources:
+      - group: ""
+        hookPhase: Failed
+        kind: Service
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "/v1, Resource=services", GroupVersionKind: "/v1, Kind=Service"
+          Name: "core-com-batch-svc-test", Namespace: "ns-app-core-test"
+          from server for: "/dev/shm/157909617": services "core-com-batch-svc-test" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "services" in API group "" in the namespace "ns-app-core-test"
+        name: core-com-batch-svc-test
+        namespace: ns-app-core-test
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1
+      - group: argoproj.io
+        hookPhase: Failed
+        kind: Rollout
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "argoproj.io/v1alpha1, Resource=rollouts", GroupVersionKind: "argoproj.io/v1alpha1, Kind=Rollout"
+          Name: "core-com-batch-test", Namespace: "ns-app-core-test"
+          from server for: "/dev/shm/2929112666": rollouts.argoproj.io "core-com-batch-test" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "rollouts" in API group "argoproj.io" in the namespace "ns-app-core-test"
+        name: core-com-batch-test
+        namespace: ns-app-core-test
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1alpha1
+      revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+      source:
+        path: app/core/hro-com-batch/test
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: test
+  reconciledAt: "2023-07-10T00:51:37Z"
+  resources:
+  - health:
+      status: Healthy
+    kind: Service
+    name: core-com-batch-svc-test
+    namespace: ns-app-core-test
+    status: Synced
+    version: v1
+  - group: argoproj.io
+    health:
+      status: Missing
+    kind: Rollout
+    name: core-com-batch-test
+    namespace: ns-app-core-test
+    status: OutOfSync
+    version: v1alpha1
+  sourceType: Kustomize
+  summary: {}
+  sync:
+    comparedTo:
+      destination:
+        name: dev-cluster
+        namespace: ns-app-core-test
+      source:
+        path: app/core/hro-com-batch/test
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: test
+    revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+    status: OutOfSync
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"core-com-ncrm-dev","namespace":"argo-system"},"spec":{"destination":{"name":"dev-cluster","namespace":"ns-app-core-dev"},"project":"hro-apps","source":{"path":"app/core/hro-com-ncrm/dev","repoURL":"https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git","targetRevision":"dev"},"syncPolicy":{"automated":{}}}}
+  name: core-com-ncrm-dev
+spec:
+  destination:
+    name: dev-cluster
+    namespace: ns-app-core-dev
+  project: hro-apps
+  source:
+    path: app/core/hro-com-ncrm/dev
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+    targetRevision: dev
+  syncPolicy:
+    automated: {}
+status:
+  health:
+    status: Healthy
+  reconciledAt: "2023-07-10T00:51:37Z"
+  resources:
+  - health:
+      status: Healthy
+    kind: Service
+    name: core-com-ncrm-svc-dev
+    namespace: ns-app-core-dev
+    status: Synced
+    version: v1
+  - group: argoproj.io
+    health:
+      status: Healthy
+    kind: Rollout
+    name: core-com-ncrm-dev
+    namespace: ns-app-core-dev
+    status: Synced
+    version: v1alpha1
+  sourceType: Kustomize
+  summary:
+    images:
+    - docker.io/istio/proxyv2:1.17.2
+    - tbd5d1uh.private-ncr.fin-ntruss.com/app/dev/core/hro-com-ncrm:dev-230707-181749-9812d09e
+    - tbd5d1uh.private-ncr.fin-ntruss.com/busybox:latest
+  sync:
+    comparedTo:
+      destination:
+        name: dev-cluster
+        namespace: ns-app-core-dev
+      source:
+        path: app/core/hro-com-ncrm/dev
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: dev
+    revision: 8664ddeeba01613ddd93f69789bbd29b0b70a43a
+    status: Synced
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"core-com-ncrm-test","namespace":"argo-system"},"spec":{"destination":{"name":"dev-cluster","namespace":"ns-app-core-test"},"project":"hro-apps","source":{"path":"app/core/hro-com-ncrm/test","repoURL":"https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git","targetRevision":"test"},"syncPolicy":{"automated":{}}}}
+  name: core-com-ncrm-test
+spec:
+  destination:
+    name: dev-cluster
+    namespace: ns-app-core-test
+  project: hro-apps
+  source:
+    path: app/core/hro-com-ncrm/test
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+    targetRevision: test
+  syncPolicy:
+    automated: {}
+status:
+  conditions:
+  - lastTransitionTime: "2023-07-10T00:21:49Z"
+    message: 'Failed sync attempt to 854159346c4c4288a5e9f091fa5cf0d3b339c110: one
+      or more objects failed to apply (dry run) (retried 5 times).'
+    type: SyncError
+  health:
+    status: Healthy
+  operationState:
+    finishedAt: "2023-07-10T00:21:49Z"
+    message: one or more objects failed to apply (dry run) (retried 5 times).
+    operation:
+      initiatedBy:
+        automated: true
+      retry:
+        limit: 5
+      sync:
+        revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+    phase: Failed
+    retryCount: 5
+    startedAt: "2023-07-10T00:16:31Z"
+    syncResult:
+      resources:
+      - group: ""
+        hookPhase: Failed
+        kind: Service
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "/v1, Resource=services", GroupVersionKind: "/v1, Kind=Service"
+          Name: "core-com-ncrm-svc-test", Namespace: "ns-app-core-test"
+          from server for: "/dev/shm/4266365088": services "core-com-ncrm-svc-test" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "services" in API group "" in the namespace "ns-app-core-test"
+        name: core-com-ncrm-svc-test
+        namespace: ns-app-core-test
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1
+      - group: argoproj.io
+        hookPhase: Failed
+        kind: Rollout
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "argoproj.io/v1alpha1, Resource=rollouts", GroupVersionKind: "argoproj.io/v1alpha1, Kind=Rollout"
+          Name: "core-com-ncrm-test", Namespace: "ns-app-core-test"
+          from server for: "/dev/shm/2512246474": rollouts.argoproj.io "core-com-ncrm-test" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "rollouts" in API group "argoproj.io" in the namespace "ns-app-core-test"
+        name: core-com-ncrm-test
+        namespace: ns-app-core-test
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1alpha1
+      revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+      source:
+        path: app/core/hro-com-ncrm/test
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: test
+  reconciledAt: "2023-07-10T00:51:37Z"
+  resources:
+  - health:
+      status: Healthy
+    kind: Service
+    name: core-com-ncrm-svc-test
+    namespace: ns-app-core-test
+    status: Synced
+    version: v1
+  - group: argoproj.io
+    health:
+      status: Missing
+    kind: Rollout
+    name: core-com-ncrm-test
+    namespace: ns-app-core-test
+    status: OutOfSync
+    version: v1alpha1
+  sourceType: Kustomize
+  summary: {}
+  sync:
+    comparedTo:
+      destination:
+        name: dev-cluster
+        namespace: ns-app-core-test
+      source:
+        path: app/core/hro-com-ncrm/test
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: test
+    revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+    status: OutOfSync
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"core-smv-api-dev","namespace":"argo-system"},"spec":{"destination":{"name":"dev-cluster","namespace":"ns-app-core-dev"},"project":"hro-apps","source":{"path":"app/core/hro-smv-backend/dev","repoURL":"https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git","targetRevision":"dev"},"syncPolicy":{"automated":{}}}}
+  name: core-smv-api-dev
+spec:
+  destination:
+    name: dev-cluster
+    namespace: ns-app-core-dev
+  project: hro-apps
+  source:
+    path: app/core/hro-smv-backend/dev
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+    targetRevision: dev
+  syncPolicy:
+    automated: {}
+status:
+  health:
+    status: Degraded
+  reconciledAt: "2023-07-10T00:51:37Z"
+  resources:
+  - health:
+      status: Healthy
+    kind: Service
+    name: core-smv-api-svc-dev
+    namespace: ns-app-core-dev
+    status: Synced
+    version: v1
+  - group: argoproj.io
+    health:
+      message: 'ProgressDeadlineExceeded: ReplicaSet "core-smv-api-dev-68bf46d558"
+        has timed out progressing.'
+      status: Degraded
+    kind: Rollout
+    name: core-smv-api-dev
+    namespace: ns-app-core-dev
+    status: Synced
+    version: v1alpha1
+  sourceType: Kustomize
+  summary:
+    images:
+    - docker.io/istio/proxyv2:1.17.2
+    - tbd5d1uh.private-ncr.fin-ntruss.com/app/dev/core/hro-smv-backend:dev-230707-180718-cdb9d607
+    - tbd5d1uh.private-ncr.fin-ntruss.com/app/dev/core/hro-smv-backend:dev-230710-075048-be26e9cf
+    - tbd5d1uh.private-ncr.fin-ntruss.com/busybox:latest
+  sync:
+    comparedTo:
+      destination:
+        name: dev-cluster
+        namespace: ns-app-core-dev
+      source:
+        path: app/core/hro-smv-backend/dev
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: dev
+    revision: 8664ddeeba01613ddd93f69789bbd29b0b70a43a
+    status: Synced
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"core-smv-api-test","namespace":"argo-system"},"spec":{"destination":{"name":"dev-cluster","namespace":"ns-app-core-test"},"project":"hro-apps","source":{"path":"app/core/hro-smv-backend/test","repoURL":"https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git","targetRevision":"test"},"syncPolicy":{"automated":{}}}}
+  name: core-smv-api-test
+spec:
+  destination:
+    name: dev-cluster
+    namespace: ns-app-core-test
+  project: hro-apps
+  source:
+    path: app/core/hro-smv-backend/test
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+    targetRevision: test
+  syncPolicy:
+    automated: {}
+status:
+  conditions:
+  - lastTransitionTime: "2023-07-10T00:21:49Z"
+    message: 'Failed sync attempt to 854159346c4c4288a5e9f091fa5cf0d3b339c110: one
+      or more objects failed to apply (dry run) (retried 5 times).'
+    type: SyncError
+  health:
+    status: Healthy
+  operationState:
+    finishedAt: "2023-07-10T00:21:49Z"
+    message: one or more objects failed to apply (dry run) (retried 5 times).
+    operation:
+      initiatedBy:
+        automated: true
+      retry:
+        limit: 5
+      sync:
+        revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+    phase: Failed
+    retryCount: 5
+    startedAt: "2023-07-10T00:16:31Z"
+    syncResult:
+      resources:
+      - group: ""
+        hookPhase: Failed
+        kind: Service
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "/v1, Resource=services", GroupVersionKind: "/v1, Kind=Service"
+          Name: "core-smv-api-svc-test", Namespace: "ns-app-core-test"
+          from server for: "/dev/shm/1090496169": services "core-smv-api-svc-test" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "services" in API group "" in the namespace "ns-app-core-test"
+        name: core-smv-api-svc-test
+        namespace: ns-app-core-test
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1
+      - group: argoproj.io
+        hookPhase: Failed
+        kind: Rollout
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "argoproj.io/v1alpha1, Resource=rollouts", GroupVersionKind: "argoproj.io/v1alpha1, Kind=Rollout"
+          Name: "core-smv-api-test", Namespace: "ns-app-core-test"
+          from server for: "/dev/shm/1239100608": rollouts.argoproj.io "core-smv-api-test" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "rollouts" in API group "argoproj.io" in the namespace "ns-app-core-test"
+        name: core-smv-api-test
+        namespace: ns-app-core-test
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1alpha1
+      revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+      source:
+        path: app/core/hro-smv-backend/test
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: test
+  reconciledAt: "2023-07-10T00:51:37Z"
+  resources:
+  - health:
+      status: Healthy
+    kind: Service
+    name: core-smv-api-svc-test
+    namespace: ns-app-core-test
+    status: Synced
+    version: v1
+  - group: argoproj.io
+    health:
+      status: Missing
+    kind: Rollout
+    name: core-smv-api-test
+    namespace: ns-app-core-test
+    status: OutOfSync
+    version: v1alpha1
+  sourceType: Kustomize
+  summary: {}
+  sync:
+    comparedTo:
+      destination:
+        name: dev-cluster
+        namespace: ns-app-core-test
+      source:
+        path: app/core/hro-smv-backend/test
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: test
+    revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+    status: OutOfSync
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"core-sts-api-dev","namespace":"argo-system"},"spec":{"destination":{"name":"dev-cluster","namespace":"ns-app-core-dev"},"project":"hro-apps","source":{"path":"app/core/hro-sts-backend/dev","repoURL":"https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git","targetRevision":"dev"},"syncPolicy":{"automated":{}}}}
+  name: core-sts-api-dev
+spec:
+  destination:
+    name: dev-cluster
+    namespace: ns-app-core-dev
+  project: hro-apps
+  source:
+    path: app/core/hro-sts-backend/dev
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+    targetRevision: dev
+  syncPolicy:
+    automated: {}
+status:
+  conditions:
+  - lastTransitionTime: "2023-07-10T00:50:56Z"
+    message: 'Failed sync attempt to 8664ddeeba01613ddd93f69789bbd29b0b70a43a: one
+      or more objects failed to apply (dry run) (retried 5 times).'
+    type: SyncError
+  health:
+    status: Healthy
+  operationState:
+    finishedAt: "2023-07-10T00:50:56Z"
+    message: one or more objects failed to apply (dry run) (retried 5 times).
+    operation:
+      initiatedBy:
+        automated: true
+      retry:
+        limit: 5
+      sync:
+        revision: 8664ddeeba01613ddd93f69789bbd29b0b70a43a
+    phase: Failed
+    retryCount: 5
+    startedAt: "2023-07-10T00:45:38Z"
+    syncResult:
+      resources:
+      - group: ""
+        hookPhase: Failed
+        kind: Service
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "/v1, Resource=services", GroupVersionKind: "/v1, Kind=Service"
+          Name: "core-sts-api-svc-dev", Namespace: "ns-app-core-dev"
+          from server for: "/dev/shm/1983986009": services "core-sts-api-svc-dev" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "services" in API group "" in the namespace "ns-app-core-dev"
+        name: core-sts-api-svc-dev
+        namespace: ns-app-core-dev
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1
+      - group: argoproj.io
+        hookPhase: Failed
+        kind: Rollout
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "argoproj.io/v1alpha1, Resource=rollouts", GroupVersionKind: "argoproj.io/v1alpha1, Kind=Rollout"
+          Name: "core-sts-api-dev", Namespace: "ns-app-core-dev"
+          from server for: "/dev/shm/2679349569": rollouts.argoproj.io "core-sts-api-dev" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "rollouts" in API group "argoproj.io" in the namespace "ns-app-core-dev"
+        name: core-sts-api-dev
+        namespace: ns-app-core-dev
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1alpha1
+      revision: 8664ddeeba01613ddd93f69789bbd29b0b70a43a
+      source:
+        path: app/core/hro-sts-backend/dev
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: dev
+  reconciledAt: "2023-07-10T00:50:56Z"
+  resources:
+  - health:
+      status: Healthy
+    kind: Service
+    name: core-sts-api-svc-dev
+    namespace: ns-app-core-dev
+    status: OutOfSync
+    version: v1
+  - group: argoproj.io
+    health:
+      status: Missing
+    kind: Rollout
+    name: core-sts-api-dev
+    namespace: ns-app-core-dev
+    status: OutOfSync
+    version: v1alpha1
+  sourceType: Kustomize
+  summary: {}
+  sync:
+    comparedTo:
+      destination:
+        name: dev-cluster
+        namespace: ns-app-core-dev
+      source:
+        path: app/core/hro-sts-backend/dev
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: dev
+    revision: 8664ddeeba01613ddd93f69789bbd29b0b70a43a
+    status: OutOfSync
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"core-sts-api-test","namespace":"argo-system"},"spec":{"destination":{"name":"dev-cluster","namespace":"ns-app-core-test"},"project":"hro-apps","source":{"path":"app/core/hro-sts-backend/test","repoURL":"https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git","targetRevision":"test"},"syncPolicy":{"automated":{}}}}
+  name: core-sts-api-test
+spec:
+  destination:
+    name: dev-cluster
+    namespace: ns-app-core-test
+  project: hro-apps
+  source:
+    path: app/core/hro-sts-backend/test
+    repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+    targetRevision: test
+  syncPolicy:
+    automated: {}
+status:
+  conditions:
+  - lastTransitionTime: "2023-07-10T00:21:49Z"
+    message: 'Failed sync attempt to 854159346c4c4288a5e9f091fa5cf0d3b339c110: one
+      or more objects failed to apply (dry run) (retried 5 times).'
+    type: SyncError
+  health:
+    status: Healthy
+  operationState:
+    finishedAt: "2023-07-10T00:21:49Z"
+    message: one or more objects failed to apply (dry run) (retried 5 times).
+    operation:
+      initiatedBy:
+        automated: true
+      retry:
+        limit: 5
+      sync:
+        revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+    phase: Failed
+    retryCount: 5
+    startedAt: "2023-07-10T00:16:31Z"
+    syncResult:
+      resources:
+      - group: ""
+        hookPhase: Failed
+        kind: Service
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "/v1, Resource=services", GroupVersionKind: "/v1, Kind=Service"
+          Name: "core-sts-api-svc-test", Namespace: "ns-app-core-test"
+          from server for: "/dev/shm/3604151321": services "core-sts-api-svc-test" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "services" in API group "" in the namespace "ns-app-core-test"
+        name: core-sts-api-svc-test
+        namespace: ns-app-core-test
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1
+      - group: argoproj.io
+        hookPhase: Failed
+        kind: Rollout
+        message: |-
+          error when retrieving current configuration of:
+          Resource: "argoproj.io/v1alpha1, Resource=rollouts", GroupVersionKind: "argoproj.io/v1alpha1, Kind=Rollout"
+          Name: "core-sts-api-test", Namespace: "ns-app-core-test"
+          from server for: "/dev/shm/3780691903": rollouts.argoproj.io "core-sts-api-test" is forbidden: User "system:serviceaccount:argo-system:argocd-application-controller" cannot get resource "rollouts" in API group "argoproj.io" in the namespace "ns-app-core-test"
+        name: core-sts-api-test
+        namespace: ns-app-core-test
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1alpha1
+      revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+      source:
+        path: app/core/hro-sts-backend/test
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: test
+  reconciledAt: "2023-07-10T00:51:37Z"
+  resources:
+  - health:
+      status: Healthy
+    kind: Service
+    name: core-sts-api-svc-test
+    namespace: ns-app-core-test
+    status: Synced
+    version: v1
+  - group: argoproj.io
+    health:
+      status: Missing
+    kind: Rollout
+    name: core-sts-api-test
+    namespace: ns-app-core-test
+    status: OutOfSync
+    version: v1alpha1
+  sourceType: Kustomize
+  summary: {}
+  sync:
+    comparedTo:
+      destination:
+        name: dev-cluster
+        namespace: ns-app-core-test
+      source:
+        path: app/core/hro-sts-backend/test
+        repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git
+        targetRevision: test
+    revision: 854159346c4c4288a5e9f091fa5cf0d3b339c110
+    status: OutOfSync
+---

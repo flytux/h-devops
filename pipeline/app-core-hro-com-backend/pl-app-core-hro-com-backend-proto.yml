@@ -1,0 +1,113 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  labels:
+    app: devops
+  name: app-core-hro-com-backend-proto
+spec:
+  finally:
+  - name: clean-workspace
+    params:
+    - name: subdirectory
+      value: $(params.clone-to-directory)
+    taskRef:
+      kind: Task
+      name: clean-workspace
+    workspaces:
+    - name: output
+      workspace: source
+  params:
+  - name: build-stage
+    type: string
+  - name: git-url
+    type: string
+  - name: git-revision
+    type: string
+  - name: git-username
+    type: string
+  - name: clone-to-directory
+    type: string
+  - name: image-url
+    type: string
+  - name: spring-profile
+    type: string
+  - name: gitops-url
+    type: string
+  - name: gitops-revision
+    type: string
+  - name: gitops-path
+    type: string
+  - name: deploy-manifest
+    type: string
+  - name: rollout-strategy
+    type: string
+  - name: pipelinerun-name
+    type: string
+  tasks:
+  - name: generate-id
+    params:
+    - name: base-version
+      value: $(params.build-stage)
+    taskRef:
+      kind: Task
+      name: generate-build-id
+  - name: clone-sources
+    params:
+    - name: git-url
+      value: $(params.git-url)
+    - name: git-revision
+      value: $(params.git-revision)
+    - name: subdirectory
+      value: $(params.clone-to-directory)
+    runAfter:
+    - generate-id
+    taskRef:
+      kind: Task
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: source
+  - name: build-image
+    params:
+    - name: IMAGE
+      value: $(params.image-url):$(tasks.generate-id.results.build-id)
+    - name: DIRECTORY
+      value: $(params.clone-to-directory)
+    - name: spring-profile
+      value: $(params.spring-profile)
+    runAfter:
+    - clone-sources
+    taskRef:
+      kind: Task
+      name: jib-maven
+    workspaces:
+    - name: source
+      workspace: source
+  - name: update-gitops
+    params:
+    - name: gitops-revision
+      value: $(params.gitops-revision)
+    - name: deploy-manifest
+      value: $(params.deploy-manifest)
+    - name: gitops-path
+      value: $(params.gitops-path)
+    - name: gitops-url
+      value: $(params.gitops-url)
+    - name: rollout-strategy
+      value: $(params.rollout-strategy)
+    - name: image-url
+      value: $(params.image-url)
+    - name: build-id
+      value: $(tasks.generate-id.results.build-id)
+    runAfter:
+    - build-image
+    taskRef:
+      kind: Task
+      name: update-gitops
+    workspaces:
+    - name: gitops
+      workspace: gitops
+  workspaces:
+  - name: source
+  - name: gitops
+

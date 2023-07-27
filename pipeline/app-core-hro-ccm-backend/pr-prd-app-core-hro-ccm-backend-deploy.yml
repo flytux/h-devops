@@ -1,0 +1,36 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: prd-app-core-hro-ccm-backend-deploy-pipeline-
+  labels:
+    app: devops
+    build-stage: prd
+spec:
+  serviceAccountName: sa-pipeline-runner
+  pipelineRef:
+          name: app-core-hro-ccm-backend-deploy
+  params:
+  - name: git-username
+    value: "tekton-dashboard"
+  - name: image-url
+    value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/prd/core/hro-ccm-backend"
+  - name: gitops-url
+    value: "https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git"
+  - name: gitops-revision
+    value: "main"
+  - name: gitops-path
+    value: "app/core/hro-ccm-backend/main"
+  - name: rollout-strategy
+    value: "rolling"
+  - name: deploy-manifest
+    value: "kustomization.yaml"
+  - name: pipeline-name
+    value: $(context.pipelineRun.name)
+  - name: mm-channel
+    value: "core:hro-ccm-backend"
+  workspaces:
+  - name: gitops
+    emptyDir: {}
+
+
+

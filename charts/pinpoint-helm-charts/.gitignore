@@ -1,0 +1,20 @@
+# Chart
+**/Chart.lock
+**/charts/*.tgz
+
+# Eclipse
+.classpath
+.project
+.settings/
+/.externalToolBuilders
+/build
+
+# IntelliJ
+*.iml
+*.ipr
+*.iws
+/.idea/
+out/
+
+#mac
+.DS_Store

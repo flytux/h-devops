@@ -1,0 +1,10 @@
+
+image:
+  # -- Name of the image repository to pull the container image from.
+  repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/elastic-system/kube-logging/logging-operator
+
+  # -- Image tag override for the default value (chart appVersion).
+  tag: "4.2.2"
+
+imagePullSecrets: 
+  - name: hero-reg

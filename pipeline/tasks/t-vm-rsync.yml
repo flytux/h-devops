@@ -1,0 +1,41 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: vm-rsync
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.17.0"
+    tekton.dev/tags: rsync, files sync
+    tekton.dev/categories: CLI
+    tekton.dev/displayName: "rsync"
+    tekton.dev/platforms: "linux/amd64,linux/s390x,linux/ppc64le,linux/arm64"
+spec:
+  description: >-
+        This task can be used to synchronize local and remote files.
+  workspaces:
+    - name: source
+      description: The directory you want to sync.
+  stepTemplate:
+    envFrom:
+    - secretRef:
+        name: hro-rsync-auth
+  params:
+    - name: local-path
+      type: string
+    - name: remote-path
+      type: string
+    - name: remote-ip
+      type: string
+    - name: exclude-path
+      type: string
+      default: ""
+  steps:
+    - name: rsync
+      image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/rsync-sshpass:hero
+      workingDir: $(workspaces.source.path)/$(params.local-path)
+      script: |
+        #mkdir ./exclude
+        #mv $(params.exclude-path) ./exclude/
+        sshpass -p $password rsync -azvh --exclude='.*' $(params.exclude-path) -e "ssh -o StrictHostKeyChecking=no -p2122" ./ $username@$(params.remote-ip):$(params.remote-path)/
+

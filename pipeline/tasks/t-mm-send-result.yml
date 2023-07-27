@@ -12,16 +12,19 @@ spec:
     - name: MM_HOST
       default: "http://mattermost-team-edition.mattermost:8065"
     - name: USER_ID
-      default: "hero-devops"
+      default: "hro-devops"
     - name: ACCESS_TOKEN
-      default: "tmcxqzkufbbhux8n8q9wefjpmw"
+      #default: "tmcxqzkufbbhux8n8q9wefjpmw"
+      default: "bhe4fwtyyiyomq38cxem3gburw"
     - name: CHANNEL_NAME
       default: "hro-build:devops-sample"
     - name: MESSAGE
       default: "파이프라인 결과"
-    - name: pipeline-name
-    - name: git-username
+    - name: pipelinerun-name
+    - name: username
       default: "tekton dashboard"
+    - name: build-namespace
+      default: $(context.taskRun.namespace)
   steps:
     - name: mmctl-send-result
       image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/mmtctl:hero
@@ -29,5 +32,5 @@ spec:
         #!/usr/bin/env sh
         set -xe
         mmctl auth login $(params.MM_HOST) --name $(params.USER_ID) --access-token $(params.ACCESS_TOKEN)
-        mmctl post create $(params.CHANNEL_NAME) --message "$(params.MESSAGE) : $(params.git-username) : https://tekton.herosonsa.co.kr/#/namespaces/devops-pipelines/pipelineruns/$(params.pipeline-name)"
+        mmctl post create $(params.CHANNEL_NAME) --message "$(params.MESSAGE) : $(params.username) : https://tekton.herosonsa.co.kr/#/namespaces/$(params.build-namespace)/pipelineruns/$(params.pipelinerun-name)"
         echo "============ mattermost message posted =============="

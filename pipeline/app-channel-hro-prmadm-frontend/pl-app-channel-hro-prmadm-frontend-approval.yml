@@ -1,0 +1,104 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  labels:
+    app: devops
+  name: app-channel-hro-prmadm-frontend-approval
+spec:
+  params:
+    - name: git-url
+    - name: git-revision
+    - name: git-username
+    - name: clone-to-directory
+    - name: remote-ip
+    - name: remote-path
+    - name: exclude-path
+    - name: pipelinerun-name
+    - name: mm-channel
+  workspaces:
+    - name: source 
+  tasks:
+    - name: notify-pipeline-start
+      taskRef:
+        name: mm-notify-start
+      params:
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
+          value: $(params.git-username)
+        - name: CHANNEL_NAME
+          value: $(params.mm-channel)
+    - name: approval-task
+      taskRef:
+        apiVersion: tekton.automatiko.io/v1beta1
+        kind: ApprovalTask
+        name: approvaltask
+      runAfter:
+        - notify-pipeline-start
+      params:
+        - name: pipeline
+          value: "$(params.pipelinerun-name)"
+        - name: description
+          value: "Approval Request from pipeline $(params.pipelinerun-name) for test environment"
+        - name: approvers
+          value:
+          - "john@email.com"
+        - name: notifyOnSlack
+          value: "chlprmadmfrontend"
+    - name: clone-sources
+      taskRef:
+        name: git-clone
+      runAfter:
+        - approval-task
+      when:
+        - input: $(tasks.approval-task.results.decision)
+          operator: in
+          values: [ "true" ]
+      params:
+        - name: git-url
+          value: $(params.git-url)
+        - name: git-revision
+          value: $(params.git-revision)
+        - name: subdirectory
+          value: $(params.clone-to-directory)
+      workspaces:
+        - name: output
+          workspace: source
+    - name: vm-rsync
+      taskRef:
+        name: vm-rsync
+      runAfter:
+        - clone-sources
+      params:
+        - name: local-path
+          value: $(params.clone-to-directory)
+        - name: remote-ip
+          value: $(params.remote-ip)
+        - name: remote-path
+          value: $(params.remote-path)
+        - name: exclude-path
+          value: $(params.exclude-path)
+      workspaces:
+        - name: source
+          workspace: source
+  finally:
+    - name: clean-workspace
+      taskRef:
+        name: clean-workspace
+      params:
+        - name: subdirectory
+          value: $(params.clone-to-directory)
+      workspaces:
+        - name: output
+          workspace: source
+    - name: report-result
+      taskRef:
+        name: mm-send-result
+      params:
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
+          value: $(params.git-username)
+        - name: CHANNEL_NAME
+          value: $(params.mm-channel)
+

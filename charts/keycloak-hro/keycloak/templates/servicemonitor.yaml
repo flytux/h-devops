@@ -1,3 +1,8 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{- if and .Values.metrics.enabled .Values.metrics.serviceMonitor.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -25,7 +30,7 @@ spec:
     {{- range $endpoints }}
     {{- $endpoint := merge . $defaultEndpoint }}
     - port: {{ $endpoint.port }}
-      path: {{ $endpoint.path }}
+      path: {{ include "common.tplvalues.render" ( dict "value" $endpoint.path "context" $) }}
       {{- if $endpoint.interval }}
       interval: {{ $endpoint.interval }}
       {{- end }}

@@ -22,4 +22,4 @@ spec:
   tls:
     - hosts:
       - argocd.herosonsa.co.kr
-      secretName: hro-tls-secret
+      secretName: argocd-server-tls

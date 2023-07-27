@@ -1,0 +1,43 @@
+global:
+  imageRegistry: "tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops"
+  imagePullSecrets: 
+    - hero-reg
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: true
+  ingressClassName: "nginx"
+  hostname: keycloak-dev.herosonsa.co.kr
+
+tls:
+  enabled: true
+  existingSecret: "hro-tls-secret"
+  usePem: true
+
+# disable cache for bakcup realms
+cache:
+  enabled: false
+
+extraEnvVars:
+  - name: KEYCLOAK_EXTRA_ARGS
+    value: "-Dkeycloak.import=/config/realms/devops-realm.json"
+
+extraVolumeMounts:
+  - name: devops-realm
+    mountPath: "/config/realms"
+    readOnly: true
+
+extraVolumes:
+  - name: devops-realm
+    configMap:
+      name: devops-realm
+      items:
+      - key: "devops-realm.json"
+        path: "devops-realm.json"
+image:
+  debug: true
+
+auth:
+  adminUser: admin
+  adminPassword: "Herosonsa12!@"

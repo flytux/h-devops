@@ -1,0 +1,31 @@
+global:
+  imageRegistry: "tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops"
+  imagePullSecrets: 
+  - hero-reg
+
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: true
+  ingressClassName: "nginx"
+  hostname: redmine.herosonsa.co.kr
+  path: /
+
+image:
+  tag: 5.0.5-debian-11-r23
+
+persistence:
+  storageClass: "nfs-client"
+
+databaseType: mariadb
+##
+mariadb:
+  enabled: true
+  auth:
+    password: bn_redmine
+
+postgresql:
+  enabled: false
+  auth:
+    password: bn_redmine

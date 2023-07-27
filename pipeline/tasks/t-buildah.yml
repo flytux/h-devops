@@ -27,7 +27,8 @@ spec:
   - name: BUILDER_IMAGE
     description: The location of the buildah builder image.
     #default: quay.io/buildah/stable:v1.18.0
-    default: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/buildah/stable:v1.29.1
+    #default: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/buildah/stable:v1.29.1
+    default: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/buildah/stable:v1.30.0
   - name: STORAGE_DRIVER
     description: Set buildah storage driver
     default: overlay
@@ -62,13 +63,13 @@ spec:
   steps:
   - name: build
     image: $(params.BUILDER_IMAGE)
-    workingDir: $(workspaces.source.path)
+    workingDir: $(workspaces.source.path)/$(params.CONTEXT)
     script: |
       [[ "$(workspaces.sslcertdir.bound)" == "true" ]] && CERT_DIR_FLAG="--cert-dir $(workspaces.sslcertdir.path)"
       buildah ${CERT_DIR_FLAG} --storage-driver=$(params.STORAGE_DRIVER) bud \
         $(params.BUILD_EXTRA_ARGS) --format=$(params.FORMAT) \
         --tls-verify=$(params.TLSVERIFY) --no-cache \
-        -f $(params.DOCKERFILE) -t $(params.IMAGE) ./$(params.CONTEXT)
+        -f $(params.DOCKERFILE) -t $(params.IMAGE) .
     volumeMounts:
     - name: varlibcontainers
       mountPath: /var/lib/containers
@@ -77,13 +78,13 @@ spec:
 
   - name: push
     image: $(params.BUILDER_IMAGE)
-    workingDir: $(workspaces.source.path)
+    workingDir: $(workspaces.source.path)/$(params.CONTEXT)
     script: |
       [[ "$(params.SKIP_PUSH)" == "true" ]] && echo "Push skipped" && exit 0
       [[ "$(workspaces.sslcertdir.bound)" == "true" ]] && CERT_DIR_FLAG="--cert-dir $(workspaces.sslcertdir.path)"
       buildah ${CERT_DIR_FLAG} --storage-driver=$(params.STORAGE_DRIVER) push \
         $(params.PUSH_EXTRA_ARGS) --tls-verify=$(params.TLSVERIFY) \
-        --digestfile $(workspaces.source.path)/image-digest $(params.IMAGE) \
+        --digestfile $(workspaces.source.path)/$(params.CONTEXT)/image-digest $(params.IMAGE) \
         docker://$(params.IMAGE)
     volumeMounts:
     - name: varlibcontainers
@@ -93,7 +94,7 @@ spec:
 
   - name: digest-to-results
     image: $(params.BUILDER_IMAGE)
-    script: cat $(workspaces.source.path)/image-digest | tee /tekton/results/IMAGE_DIGEST
+    script: cat $(workspaces.source.path)/$(params.CONTEXT)/image-digest | tee /tekton/results/IMAGE_DIGEST
 
   volumes:
   - name: varlibcontainers

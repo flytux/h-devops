@@ -30,8 +30,6 @@ Return the proper Redmine image name
        -out  /etc/ssl/certs/ssl-cert-snakeoil.pem
        -keyout /etc/ssl/private/ssl-cert-snakeoil.key -extensions v3_req
   {{- end }}
-  securityContext:
-    runAsUser: 0
   {{- if .Values.certificates.extraEnvVars }}
   env:
   {{- tpl (toYaml .Values.certificates.extraEnvVars) $ | nindent 2 }}

@@ -3,3 +3,6 @@ global:
   imagePullSecrets: 
     - name: hero-reg
 
+persistence:
+  storageClass: "nfs-client"
+

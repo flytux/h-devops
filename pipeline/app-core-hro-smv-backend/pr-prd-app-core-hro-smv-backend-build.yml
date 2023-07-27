@@ -1,0 +1,39 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: prd-app-core-hro-smv-backend-build-pipeline-
+  labels:
+    app: devops
+    build-stage: prd
+spec:
+  serviceAccountName: sa-pipeline-runner
+  pipelineRef:
+          name: app-core-hro-smv-backend-build
+  params:
+  - name: build-stage
+    value: "prd"
+  - name: git-url
+    value: "https://gitlab.herosonsa.co.kr/app/core/hro-smv-backend.git"
+  - name: git-revision
+    value: "main"
+  - name: git-username
+    value: "tekton-dashboard"
+  - name: clone-to-directory
+    value: $(context.pipelineRun.name)
+  - name: image-url
+    value: "tbd5d1uh.private-ncr.fin-ntruss.com/app/prd/core/hro-smv-backend"
+  - name: spring-profile
+    value: "prd"
+  - name: pipeline-name
+    value: $(context.pipelineRun.name)
+  - name: mm-channel
+    value: "core:hro-smv-backend"
+  workspaces:
+  - name: source
+    persistentvolumeclaim:
+      claimName: pvc-app-core-hro-smv-backend
+  - name: manifest-dir
+    emptyDir: {}
+
+
+

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    volume.beta.kubernetes.io/storage-provisioner: nas.csi.ncloud.com
+    volume.kubernetes.io/storage-provisioner: nas.csi.ncloud.com
+  name: pvc-app-core-shared-data
+  namespace: ns-app-core-dev
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 10G
+  storageClassName: nks-nas-csi

@@ -1,34 +1,42 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
+  labels:
+    app: devops
   name: app-core-hro-test-deploy
 spec:
   params:
-    - name: argo-url
-    - name: argo-app-name
-    - name: gitops-revision
+    - name: username
+    - name: image-url
+    - name: build-id
     - name: gitops-url
-    - name: deploy-manifest
+    - name: gitops-revision
     - name: gitops-path
+    - name: deploy-manifest
     - name: rollout-strategy
+    - name: pipelinerun-name
     - name: pipeline-name
+    - name: mm-channel
   workspaces:
-    - name: gitops 
+    - name: gitops
+    - name: hro-tekton-logs
   tasks:
     - name: notify-pipeline-start
       taskRef:
         name: mm-notify-start
       params:
-        - name: pipeline-name
-          value: $(params.pipeline-name)
-    - name: deploy
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
+          value: $(params.username)
+        - Name: CHANNEL_NAME
+          Value: $(params.mm-channel)
+    - name: update-gitops
       taskRef:
-        name: deploy
+        name: update-gitops
+      runAfter:
+        - notify-pipeline-start
       params:
-        - name: argo-url
-          value: $(params.argo-url) 
-        - name: argo-app-name
-          value: $(params.argo-app-name)
         - name: gitops-revision
           value: $(params.gitops-revision)
         - name: deploy-manifest
@@ -39,14 +47,33 @@ spec:
           value: $(params.gitops-url)
         - name: rollout-strategy
           value: $(params.rollout-strategy)
+        - name: image-url
+          value: $(params.image-url)
+        - name: build-id
+          value: $(params.build-id)
       workspaces:
         - name: gitops
           workspace: gitops
   finally:
     - name: report-result
       taskRef:
-        #name: print-result
         name: mm-send-result
       params:
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
+          value: $(params.username)
+        - name: CHANNEL_NAME
+          value: $(params.mm-channel)
+    - name: save-pipelinerun-logs
+      taskRef:
+        name: tekton-logging
+      params:
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
         - name: pipeline-name
           value: $(params.pipeline-name)
+      workspaces:
+        - name: hro-tekton-logs
+          workspace: hro-tekton-logs
+

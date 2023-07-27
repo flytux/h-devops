@@ -1,0 +1,144 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  labels:
+    app: devops
+  name: app-channel-hro-mobile-frontend-podman-build
+spec:
+  params:
+    - name: build-stage
+    - name: git-url
+    - name: git-revision
+    - name: git-username
+    - name: clone-to-directory
+    - name: image-url
+    - name: red-project-name
+    - name: application-name
+    - name: last-commit-message
+    - name: merge-title
+    - name: merge-description
+    - name: merge-date
+    - name: pipelinerun-name
+    - name: pipeline-name
+    - name: mm-channel
+  workspaces:
+    - name: source 
+    - name: manifest-dir
+    - name: hro-redmine-config
+    - name: hro-tekton-logs
+  tasks:
+    - name: notify-pipeline-start
+      taskRef:
+        name: mm-notify-start
+      params:
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
+          value: $(params.git-username)
+        - name: CHANNEL_NAME
+          value: $(params.mm-channel)
+    - name: generate-id
+      taskRef:
+        name: generate-build-id
+      params:
+        - name: base-version
+          value: $(params.build-stage)
+    - name: clone-sources
+      taskRef:
+        name: git-clone
+      runAfter:
+        - generate-id
+      params:
+        - name: git-url
+          value: $(params.git-url)
+        - name: git-revision
+          value: $(params.git-revision)
+        - name: subdirectory
+          value: $(params.clone-to-directory)
+      workspaces:
+        - name: output
+          workspace: source
+    - name: build-image
+      taskRef:
+        name: buildah
+      runAfter:
+        - clone-sources
+      params:
+        - name: IMAGE
+          value: $(params.image-url):$(tasks.generate-id.results.build-id)
+        - name: CONTEXT
+          value: $(params.clone-to-directory)
+      workspaces:
+        - name: source
+          workspace: source
+    - name: image-scan
+      taskRef:
+        name: trivy-scan
+      runAfter:
+        - build-image
+      params:
+        - name: IMAGE
+          value: $(params.image-url):$(tasks.generate-id.results.build-id)
+      workspaces:
+        - name: manifest-dir
+          workspace: manifest-dir
+    - name: create-redmine-issue
+      taskRef:
+        name: redmine-issue
+      runAfter:
+        - build-image
+      params:
+        - name: image-url
+          value: $(params.image-url)
+        - name: build-id
+          value: $(tasks.generate-id.results.build-id)
+        - name: red-project-name
+          value: $(params.red-project-name)
+        - name: red-issue-subject
+          value: "$(params.application-name)"
+        - name: last-commit-message
+          value: $(params.last-commit-message)
+        - name: merge-title
+          value: $(params.merge-title)
+        - name: merge-description
+          value: $(params.merge-description)
+        - name: merge-date
+          value: $(params.merge-date)
+        - name: merge-commit-sha
+          value: $(params.git-revision)
+        - name: git-username
+          value: $(params.git-username)
+      workspaces:
+        - name: hro-redmine-config
+          workspace: hro-redmine-config
+  finally:
+    - name: clean-workspace
+      taskRef:
+        name: clean-workspace
+      params:
+        - name: subdirectory
+          value: $(params.clone-to-directory)
+      workspaces:
+        - name: output
+          workspace: source
+    - name: report-result
+      taskRef:
+        name: mm-send-result
+      params:
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
+          value: $(params.git-username)
+        - name: CHANNEL_NAME
+          value: $(params.mm-channel)
+    - name: save-pipelinerun-logs
+      taskRef:
+        name: tekton-logging
+      params:
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: pipeline-name
+          value: $(params.pipeline-name)
+      workspaces:
+        - name: hro-tekton-logs
+          workspace: hro-tekton-logs

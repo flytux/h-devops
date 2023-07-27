@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: core-web-monitor
+  namespace: monitor-dev
+spec:
+  endpoints:
+    - port: metrics
+  jobLabel: jobLabel
+  namespaceSelector:
+    matchNames:
+      - monitor-dev
+  selector:
+    matchLabels:
+      app: prometheus-node-exporter

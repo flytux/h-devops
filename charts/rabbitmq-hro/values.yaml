@@ -1,13 +1,15 @@
 global:
   imageRegistry: "tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops"
   imagePullSecrets: [ "hero-reg" ]
-  storageClass: "nfs-client"
+  storageClass: "nks-block-storage"
 
 ingress:
   enabled: false
   path: /
   pathType: ImplementationSpecific
-  hostname: rabbitmq.local
-  tls: false
-  ingressClassName: ""
-  existingSecret: ""
+#  hostname: rabbitmq.local
+  hostname: rabbitmq.herosonsa.co.kr
+  tls: true
+  ingressClassName: "nginx"
+  existingSecret: hro-tls-secret
+replicaCount: 3

@@ -1,6 +1,8 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
+  labels:
+    app: devops
   name: app-channel-hro-prmadm-backend-approval
 spec:
   params:
@@ -10,15 +12,13 @@ spec:
     - name: git-username
     - name: clone-to-directory
     - name: image-url
-#    - name: argo-app-name
+    - name: spring-profile
     - name: gitops-url
-#    - name: argo-url
     - name: gitops-revision
     - name: gitops-path
     - name: deploy-manifest
-    - name: sonar-project-key
     - name: rollout-strategy
-    - name: pipeline-name
+    - name: pipelinerun-name
     - name: mm-channel
   workspaces:
     - name: source 
@@ -29,9 +29,9 @@ spec:
       taskRef:
         name: mm-notify-start
       params:
-        - name: pipeline-name
-          value: $(params.pipeline-name)
-        - name: git-username
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
           value: $(params.git-username)
         - name: CHANNEL_NAME
           value: $(params.mm-channel)
@@ -56,19 +56,6 @@ spec:
       workspaces:
         - name: output
           workspace: source
-    - name: source-scan
-      taskRef:
-        name: sonarqube-scan
-      runAfter:
-        - clone-sources
-      params:
-        - name: SONAR_PROJECT_KEY
-          value: $(params.sonar-project-key)
-        - name: SOURCE_TO_SCAN
-          value: $(params.clone-to-directory)
-      workspaces:
-        - name: source
-          workspace: source
     - name: build-image
       taskRef:
         name: jib-maven
@@ -79,8 +66,8 @@ spec:
           value: $(params.image-url):$(tasks.generate-id.results.build-id)
         - name: DIRECTORY
           value: $(params.clone-to-directory)
-        - name: build-stage
-          value: $(params.build-stage)
+        - name: spring-profile
+          value: $(params.spring-profile)
       workspaces:
         - name: source
           workspace: source
@@ -104,9 +91,9 @@ spec:
         - build-image
       params:
         - name: pipeline
-          value: "$(params.pipeline-name)"
+          value: "$(params.pipelinerun-name)"
         - name: description
-          value: "Approval Request from pipeline $(params.pipeline-name) for test environment"
+          value: "Approval Request from pipeline $(params.pipelinerun-name) for test environment"
         - name: approvers
           value:
           - "john@email.com"
@@ -158,9 +145,9 @@ spec:
         #name: print-result
         name: mm-send-result
       params:
-        - name: pipeline-name
-          value: $(params.pipeline-name)
-        - name: git-username
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
           value: $(params.git-username)
         - name: CHANNEL_NAME
           value: $(params.mm-channel)

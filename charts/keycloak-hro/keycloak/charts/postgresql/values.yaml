@@ -4,14 +4,13 @@
 global:
   ## @param global.imageRegistry Global Docker image registry
   ##
-  imageRegistry: "tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops"
+  imageRegistry: ""
   ## @param global.imagePullSecrets Global Docker registry secret names as an array
   ## e.g.
   ## imagePullSecrets:
   ##   - myRegistryKeySecretName
   ##
-  imagePullSecrets: 
-    - name: hero-reg
+  imagePullSecrets: []
   ## @param global.storageClass Global StorageClass for Persistent Volume(s)
   ##
   storageClass: ""
@@ -94,9 +93,9 @@ diagnosticMode:
 ## @param image.debug Specify if debug values should be set
 ##
 image:
-  registry: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops 
+  registry: docker.io
   repository: bitnami/postgresql
-  tag: 15.2.0-debian-11-r2
+  tag: 15.3.0-debian-11-r7
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -123,13 +122,13 @@ auth:
   ## @param auth.enablePostgresUser Assign a password to the "postgres" admin user. Otherwise, remote access will be blocked for this user
   ##
   enablePostgresUser: true
-  ## @param auth.postgresPassword Password for the "postgres" admin user. Ignored if `auth.existingSecret` with key `postgres-password` is provided
+  ## @param auth.postgresPassword Password for the "postgres" admin user. Ignored if `auth.existingSecret` is provided
   ##
   postgresPassword: ""
   ## @param auth.username Name for a custom user to create
   ##
   username: ""
-  ## @param auth.password Password for the custom user to create. Ignored if `auth.existingSecret` with key `password` is provided
+  ## @param auth.password Password for the custom user to create. Ignored if `auth.existingSecret` is provided
   ##
   password: ""
   ## @param auth.database Name for a custom database to create
@@ -138,7 +137,7 @@ auth:
   ## @param auth.replicationUsername Name of the replication user
   ##
   replicationUsername: repl_user
-  ## @param auth.replicationPassword Password for the replication user. Ignored if `auth.existingSecret` with key `replication-password` is provided
+  ## @param auth.replicationPassword Password for the replication user. Ignored if `auth.existingSecret` is provided
   ##
   replicationPassword: ""
   ## @param auth.existingSecret Name of existing secret to use for PostgreSQL credentials. `auth.postgresPassword`, `auth.password`, and `auth.replicationPassword` will be ignored and picked up from this secret. The secret might also contains the key `ldap-password` if LDAP is enabled. `ldap.bind_password` will be ignored and picked from this secret in this case.
@@ -1052,7 +1051,7 @@ networkPolicy:
     ## @param networkPolicy.ingressRules.primaryAccessOnlyFrom.enabled Enable ingress rule that makes PostgreSQL primary node only accessible from a particular origin.
     ## @param networkPolicy.ingressRules.primaryAccessOnlyFrom.namespaceSelector [object] Namespace selector label that is allowed to access the PostgreSQL primary node. This label will be used to identified the allowed namespace(s).
     ## @param networkPolicy.ingressRules.primaryAccessOnlyFrom.podSelector [object] Pods selector label that is allowed to access the PostgreSQL primary node. This label will be used to identified the allowed pod(s).
-    ## @param networkPolicy.ingressRules.primaryAccessOnlyFrom.customRules [object] Custom network policy for the PostgreSQL primary node.
+    ## @param networkPolicy.ingressRules.primaryAccessOnlyFrom.customRules Custom network policy for the PostgreSQL primary node.
     ##
     primaryAccessOnlyFrom:
       enabled: false
@@ -1074,11 +1073,11 @@ networkPolicy:
       ##           matchLabels:
       ##             label: example
       ##
-      customRules: {}
+      customRules: []
     ## @param networkPolicy.ingressRules.readReplicasAccessOnlyFrom.enabled Enable ingress rule that makes PostgreSQL read-only nodes only accessible from a particular origin.
     ## @param networkPolicy.ingressRules.readReplicasAccessOnlyFrom.namespaceSelector [object] Namespace selector label that is allowed to access the PostgreSQL read-only nodes. This label will be used to identified the allowed namespace(s).
     ## @param networkPolicy.ingressRules.readReplicasAccessOnlyFrom.podSelector [object] Pods selector label that is allowed to access the PostgreSQL read-only nodes. This label will be used to identified the allowed pod(s).
-    ## @param networkPolicy.ingressRules.readReplicasAccessOnlyFrom.customRules [object] Custom network policy for the PostgreSQL read-only nodes.
+    ## @param networkPolicy.ingressRules.readReplicasAccessOnlyFrom.customRules Custom network policy for the PostgreSQL read-only nodes.
     ##
     readReplicasAccessOnlyFrom:
       enabled: false
@@ -1100,9 +1099,9 @@ networkPolicy:
       ##           matchLabels:
       ##             label: example
       ##
-      customRules: {}
+      customRules: []
   ## @param networkPolicy.egressRules.denyConnectionsToExternal Enable egress rule that denies outgoing traffic outside the cluster, except for DNS (port 53).
-  ## @param networkPolicy.egressRules.customRules [object] Custom network policy rule
+  ## @param networkPolicy.egressRules.customRules Custom network policy rule
   ##
   egressRules:
     # Deny connections to external. This is not compatible with an external database.
@@ -1115,7 +1114,7 @@ networkPolicy:
     ##           matchLabels:
     ##             label: example
     ##
-    customRules: {}
+    customRules: []
 
 ## @section Volume Permissions parameters
 ##
@@ -1135,9 +1134,9 @@ volumePermissions:
   ## @param volumePermissions.image.pullSecrets Init container volume-permissions image pull secrets
   ##
   image:
-    registry: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops
+    registry: docker.io
     repository: bitnami/bitnami-shell
-    tag: 11-debian-11-r86
+    tag: 11-debian-11-r120
     digest: ""
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.
@@ -1230,9 +1229,9 @@ metrics:
   ## @param metrics.image.pullSecrets Specify image pull secrets
   ##
   image:
-    registry: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops
+    registry: docker.io
     repository: bitnami/postgres-exporter
-    tag: 0.11.1-debian-11-r60
+    tag: 0.12.0-debian-11-r91
     digest: ""
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.

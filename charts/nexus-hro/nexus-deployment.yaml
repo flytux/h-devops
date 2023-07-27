@@ -22,7 +22,7 @@ spec:
           mountPath: /nexus-data
       containers:
       #- image: sonatype/nexus3
-      - image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/sonatype/nexus3
+      - image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/sonatype/nexus3:3.57.0
         name: nexus
         ports:
         - containerPort: 8081

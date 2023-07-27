@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    meta.helm.sh/release-name: ingress-nginx
+    meta.helm.sh/release-namespace: ingress-nginx
+    service.beta.kubernetes.io/ncloud-load-balancer-internal: "true"
+    service.beta.kubernetes.io/ncloud-load-balancer-layer-type: nplb
+    service.beta.kubernetes.io/ncloud-load-balancer-size: SMALL
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.8.1
+    helm.sh/chart: ingress-nginx-4.7.1
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+spec:
+  ports:
+  - appProtocol: http
+    name: http
+    nodePort: 32580
+    port: 80
+    protocol: TCP
+    targetPort: http
+  - appProtocol: https
+    name: https
+    nodePort: 31763
+    port: 443
+    protocol: TCP
+    targetPort: https
+  selector:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+  sessionAffinity: None
+  type: LoadBalancer
+

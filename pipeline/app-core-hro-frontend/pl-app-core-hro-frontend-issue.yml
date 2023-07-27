@@ -1,0 +1,68 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  labels:
+    app: devops
+  name: app-core-hro-frontend-issue
+spec:
+  params:
+    - name: git-revision
+    - name: git-username
+    - name: red-project-name
+    - name: application-name
+    - name: last-commit-message
+    - name: merge-title
+    - name: merge-description
+    - name: merge-date
+    - name: pipelinerun-name
+    - name: mm-channel
+  workspaces:
+    - name: hro-redmine-config
+  tasks:
+    - name: notify-pipeline-start
+      taskRef:
+        name: mm-notify-start
+      params:
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
+          value: $(params.git-username)
+        - name: CHANNEL_NAME
+          value: $(params.mm-channel)
+    - name: create-redmine-issue
+      taskRef:
+        name: redmine-issue
+      runAfter:
+        - notify-pipeline-start
+      params:
+        - name: red-project-name
+          value: $(params.red-project-name)
+        - name: red-issue-subject
+          value: "$(params.application-name)"
+        - name: last-commit-message
+          value: $(params.last-commit-message)
+        - name: merge-title
+          value: $(params.merge-title)
+        - name: merge-description
+          value: $(params.merge-description)
+        - name: merge-date
+          value: $(params.merge-date)
+        - name: merge-commit-sha
+          value: $(params.git-revision)
+        - name: git-username
+          value: $(params.git-username)
+      workspaces:
+        - name: hro-redmine-config
+          workspace: hro-redmine-config
+  finally:
+    - name: report-result
+      taskRef:
+        name: mm-send-result
+      params:
+        - name: pipelinerun-name
+          value: $(params.pipelinerun-name)
+        - name: username
+          value: $(params.git-username)
+        - name: CHANNEL_NAME
+          value: $(params.mm-channel)
+

@@ -1,0 +1,65 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: tekton-logging
+  namespace: devops-pipelines
+spec:
+  description: This task saves tekton pipelinerun logs
+  params:
+    - name: pipelinerun-name
+      type: string
+    - name: pipeline-name
+      type: string
+  results:
+    - description: Current timestamp
+      name: timestamp
+      type: string
+  steps:
+    - computeResources: {}
+      image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/library/bash:5.0.18
+      name: get-timestamp
+      script: |
+        #!/usr/bin/env bash
+        ts=`date "+%y%m%d-%H%M%S"`
+        echo "Current Timestamp: ${ts}"
+        echo ${ts} | tr -d "\n" | tee $(results.timestamp.path)
+    - computeResources: {}
+      env:
+        - name: HOME
+          value: /tekton/home
+      image: >-
+        tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/tekton-releases/dogfooding/tkn:v0.4
+      name: save-logs
+      script: >
+        set -x
+
+
+        if [ "$(workspaces.kubeconfig.bound)" = "true" ] && [ -e
+        $(workspaces.kubeconfig.path)/kubeconfig ]; then
+          export KUBECONFIG="$(workspaces.kubeconfig.path)"/kubeconfig
+        fi
+
+
+        if [ -d $(workspaces.hro-tekton-logs.path)/$(params.pipeline-name) ];
+        then
+          echo "$(workspaces.hro-tekton-logs.path)/$(params.pipeline-name) exists"
+        else
+          mkdir $(workspaces.hro-tekton-logs.path)/$(params.pipeline-name)
+        fi
+
+
+        ts=`cat $(results.timestamp.path)`
+
+        tkn pr logs --timestamps $(params.pipelinerun-name) > $(workspaces.hro-tekton-logs.path)/$(params.pipeline-name)/$(params.pipelinerun-name)-${ts}
+
+        echo "Log File Name: $(params.pipelinerun-name)-${ts}"
+
+        cat $(workspaces.hro-tekton-logs.path)/$(params.pipeline-name)/$(params.pipelinerun-name)-${ts}
+  workspaces:
+    - description: >-
+        An optional workspace that allows you to provide a .kube/config file for
+        tkn to access the cluster. The file should be placed at the root of the
+        Workspace with name kubeconfig.
+      name: kubeconfig
+      optional: true
+    - name: hro-tekton-logs
