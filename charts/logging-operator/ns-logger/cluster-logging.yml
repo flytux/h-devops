@@ -3,25 +3,24 @@ kind: Logging
 metadata:
   name: logging-dev
 spec:
-  controlNamespace: cattle-logging-system
-  fluentbit:
-    extraVolumeMounts:
-    - destination: /hro/nas_dev
-      readOnly: true
-      source: /hro/nas_dev
-    image:
-      imagePullSecrets:
-      - name: hero-reg
-      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/elastic-system/fluent/fluent-bit
-      tag: 2.1.8-h6
-    inputTail:
-      Path: /hro/nas_dev/dev/hro_app/core-com-api-dev/log/*.log
-      Path_Key: filename
-      Read_From_Head: on
-      multiline.parser:
-        - java
-        - hero-multiline-parser
-    logLevel: debug
+  controlNamespace: elastic-system
+    #  fluentbit:
+    #    extraVolumeMounts:
+    #    - destination: /hro/nas_dev
+    #      readOnly: true
+    #      source: /hro/nas_dev
+    #    image:
+    #      imagePullSecrets:
+    #      - name: hero-reg
+    #      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/elastic-system/fluent/fluent-bit
+    #      tag: 2.1.8-mlp
+    #    inputTail:
+    #      Path: /hro/nas_dev/dev/hro_app/core-com-api-dev/log/*.log
+    #      Path_Key: filename
+    #      multiline.parser:
+    #        - java
+    #        - hero-multiline-parser
+    #    logLevel: debug
   fluentd:
     configReloaderImage:
       imagePullSecrets:
@@ -34,6 +33,37 @@ spec:
       repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/elastic-system/kube-logging/fluentd
       tag: v1.15-ruby3
     logLevel: debug
+---
+apiVersion: logging.banzaicloud.io/v1beta1
+kind: FluentbitAgent
+metadata:
+  name: logging-dev
+spec:
+  extraVolumeMounts:
+  - destination: /hro/nas_dev
+    readOnly: true
+    source: /hro/nas_dev
+  image:
+    imagePullSecrets:
+    - name: hero-reg
+    repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/elastic-system/fluent/fluent-bit
+    tag: 2.1.8-mlp
+  inputTail:
+    Path: /hro/nas_dev/dev/hro_app/core-com-api-dev/log/*.log
+    Path_Key: filename
+    multiline.parser:
+      - java
+      - hero-multiline-parser
+  customParsers: |
+    [MULTILINE_PARSER]
+    name          hero-multiline-parser
+    type          regex
+    flush_timeout 1000
+    rule      "start_state"   "/^\[\d{4}-\d{2}-\d{2}\s+.*/"         "cont"
+    rule      "cont"          "^(\s+|\||[0-9]).*"                   "cont"
+    rule      "cont"          "^$"                                  "cont"
+    rule      "cont"          "^}$"                                 "cont"
+  logLevel: debug
 ---
 apiVersion: logging.banzaicloud.io/v1beta1
 kind: ClusterFlow
