@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tekton-approval-ingress
+  namespace: devops-pipelines
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: tekton-approval.herosonsa.co.kr
+      http:
+        paths:
+          - backend:
+              service:
+                name: automatiko-approval-task
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - tekton-approval.herosonsa.co.kr
+      secretName: hro-tls-secret
+

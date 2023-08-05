@@ -42,6 +42,7 @@ spec:
     spec:
       containers:
         - image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/redmine:4.2.5
+        #- image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/redmine:hero
           imagePullPolicy: Always
           name: redmine
           ports:
@@ -71,7 +72,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: red.herosonsa.co.kr
+    - host: redmine.herosonsa.co.kr
       http:
         paths:
           - backend:

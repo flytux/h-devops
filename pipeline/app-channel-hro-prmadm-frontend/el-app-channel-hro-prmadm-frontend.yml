@@ -389,6 +389,8 @@ spec:
           value: $(tt.params.git-revision)
         - name: remote-ip
           value: "10.1.20.12"
+        - name: remote-ip-2
+          value: "10.1.20.13"
         - name: remote-path
           value: "/hro_app/app/web/PRD-PRMADM-11"
         - name: exclude-path
@@ -460,6 +462,8 @@ spec:
           value: $(tt.params.git-revision)
         - name: remote-ip
           value: "10.1.20.12"
+        - name: remote-ip-2
+          value: "10.1.20.13"
         - name: remote-path
           value: "/hro_app/app/web/PRD-PRMADM-11"
         - name: exclude-path

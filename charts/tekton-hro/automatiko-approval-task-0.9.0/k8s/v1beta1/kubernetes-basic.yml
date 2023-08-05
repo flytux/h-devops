@@ -5,7 +5,7 @@ metadata:
   annotations:
   labels:
     app.kubernetes.io/name: automatiko-approval-task
-    app.kubernetes.io/version: 0.7.0
+    app.kubernetes.io/version: 0.9.0
   name: automatiko-approval-task
 ---
 apiVersion: v1
@@ -14,7 +14,7 @@ metadata:
   annotations:
   labels:
     app.kubernetes.io/name: automatiko-approval-task
-    app.kubernetes.io/version: 0.7.0
+    app.kubernetes.io/version: 0.9.0
   name: automatiko-approval-task
 spec:
   ports:
@@ -23,7 +23,7 @@ spec:
       targetPort: 8080
   selector:
     app.kubernetes.io/name: automatiko-approval-task
-    app.kubernetes.io/version: 0.7.0
+    app.kubernetes.io/version: 0.9.0
   type: ClusterIP
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -37,7 +37,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: automatiko-approval-task
-    namespace: default
+    namespace: devops-pipelines
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -101,7 +101,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: automatiko-approval-task
-    namespace: default
+    namespace: devops-pipelines
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -114,7 +114,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: automatiko-approval-task
-    namespace: default
+    namespace: devops-pipelines
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -127,7 +127,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: automatiko-approval-task
-    namespace: default
+    namespace: devops-pipelines
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -140,26 +140,26 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: automatiko-approval-task
-    namespace: default
+    namespace: devops-pipelines
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/name: automatiko-approval-task
-    app.kubernetes.io/version: 0.7.0
+    app.kubernetes.io/version: 0.9.0
   name: automatiko-approval-task
 spec:
   replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: automatiko-approval-task
-      app.kubernetes.io/version: 0.7.0
+      app.kubernetes.io/version: 0.9.0
   template:
     metadata:
       labels:
         app.kubernetes.io/name: automatiko-approval-task
-        app.kubernetes.io/version: 0.7.0
+        app.kubernetes.io/version: 0.9.0
     spec:
       containers:
         - env:
@@ -168,9 +168,9 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: QUARKUS_OPERATOR_SDK_NAMESPACES
-              value: default
+              value: devops-pipelines
             - name: QUARKUS_AUTOMATIKO_SERVICE_URL
-              value: http://localhost:9000
+              value: https://tekton-approval.herosonsa.co.kr
             - name: QUARKUS_MAILER_MOCK
               value: "true"
             - name: QUARKUS_PROFILE
@@ -187,7 +187,13 @@ spec:
               value: password                              
             - name: QUARKUS_AUTOMATIKO_ON_INSTANCE_END
               value: "keep" 
-          image: automatiko/automatiko-approval-task
+          #  - name: QUARKUS_AUTOMATIKO_NOTIFICATIONS_SLACK_CORECOMBACKEND
+          #    value: "https://mattermost.herosonsa.co.kr/hooks/mhjfywnkbbfftrpnjy1zpoyiso"
+          envFrom:
+            - secretRef:
+                name: hro-mm-channels
+          #image: automatiko/automatiko-approval-task
+          image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/automatiko-approval-task:v0.9.0
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -215,3 +221,6 @@ spec:
             successThreshold: 1
             timeoutSeconds: 10
       serviceAccountName: automatiko-approval-task
+      imagePullSecrets:
+        - name: hero-reg
+

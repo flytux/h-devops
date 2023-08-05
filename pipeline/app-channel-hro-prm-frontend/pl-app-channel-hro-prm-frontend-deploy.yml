@@ -11,6 +11,7 @@ spec:
     - name: git-url
     - name: clone-to-directory
     - name: remote-ip
+    - name: remote-ip-2
     - name: remote-path
     - name: exclude-path
     - name: pipelinerun-name
@@ -55,6 +56,23 @@ spec:
           value: $(params.clone-to-directory)
         - name: remote-ip
           value: $(params.remote-ip)
+        - name: remote-path
+          value: $(params.remote-path)
+        - name: exclude-path
+          value: $(params.exclude-path)
+      workspaces:
+        - name: source
+          workspace: source
+    - name: vm-rsync-2
+      taskRef:
+        name: vm-rsync
+      runAfter:
+        - vm-rsync
+      params:
+        - name: local-path
+          value: $(params.clone-to-directory)
+        - name: remote-ip
+          value: $(params.remote-ip-2)
         - name: remote-path
           value: $(params.remote-path)
         - name: exclude-path

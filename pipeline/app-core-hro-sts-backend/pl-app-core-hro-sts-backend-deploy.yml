@@ -12,6 +12,8 @@ spec:
     - name: gitops-url
     - name: gitops-revision
     - name: gitops-path
+    - name: gitops-revision-dr
+    - name: gitops-path-dr
     - name: deploy-manifest
     - name: rollout-strategy
     - name: pipelinerun-name
@@ -43,6 +45,29 @@ spec:
           value: $(params.deploy-manifest)
         - name: gitops-path
           value: $(params.gitops-path)
+        - name: gitops-url
+          value: $(params.gitops-url)
+        - name: rollout-strategy
+          value: $(params.rollout-strategy)
+        - name: image-url
+          value: $(params.image-url)
+        - name: build-id
+          value: $(params.build-id)
+      workspaces:
+        - name: gitops
+          workspace: gitops
+    - name: update-gitops-dr
+      taskRef:
+        name: update-gitops
+      runAfter:
+        - update-gitops
+      params:
+        - name: gitops-revision
+          value: $(params.gitops-revision-dr)
+        - name: deploy-manifest
+          value: $(params.deploy-manifest)
+        - name: gitops-path
+          value: $(params.gitops-path-dr)
         - name: gitops-url
           value: $(params.gitops-url)
         - name: rollout-strategy

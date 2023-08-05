@@ -137,7 +137,7 @@ spec:
   # Source of the application manifests
   source:
     repoURL: https://hello-3031818.devtools.fin-ncloud.com/3031818/hro-apps-repository.git  # Can point to either a Helm chart repo or a git repo.
-    targetRevision: dev  # For Helm, this refers to the chart version.
+    targetRevision: main  # For Helm, this refers to the chart version.
     path: app/core/hro-com-ncrm/main  # This has no meaning for Helm charts pulled directly from a Helm repo instead of git.
   destination:
     name: prd-cluster

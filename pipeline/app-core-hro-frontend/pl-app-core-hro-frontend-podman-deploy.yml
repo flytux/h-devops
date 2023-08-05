@@ -10,6 +10,7 @@ spec:
     - name: image-url
     - name: build-id
     - name: remote-ip
+    - name: remote-ip-2
     - name: application-name
     - name: service-port
     - name: pipelinerun-name
@@ -37,6 +38,23 @@ spec:
       params:
         - name: remote-ip
           value: $(params.remote-ip)
+        - name: image
+          value: $(params.image-url):$(params.build-id)
+        - name: container-name
+          value: $(params.application-name)
+        - name: service-port
+          value: $(params.service-port)
+      workspaces:
+        - name: credentials
+          workspace: credentials
+    - name: vm-deploy-2
+      taskRef:
+        name: vm-deploy
+      runAfter:
+        - vm-deploy
+      params:
+        - name: remote-ip
+          value: $(params.remote-ip-2)
         - name: image
           value: $(params.image-url):$(params.build-id)
         - name: container-name

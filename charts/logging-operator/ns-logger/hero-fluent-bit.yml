@@ -1,0 +1,29 @@
+apiVersion: logging.banzaicloud.io/v1beta1
+kind: FluentbitAgent
+metadata:
+  name: logging-dev
+spec:
+  extraVolumeMounts:
+  - destination: /hro/nas_dev
+    readOnly: true
+    source: /hro/nas_dev
+  image:
+    imagePullSecrets:
+    - name: hero-reg
+    repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/elastic-system/fluent/fluent-bit
+    tag: 2.1.4-debug
+  inputTail:
+    Path: /hro/nas_dev/dev/hro_app/core-com-api-dev/log/*.log
+    Path_Key: filename
+    Read_From_Head: on
+    multiline.parser: 
+      - java
+      - hero-parser
+  customParsers: |
+                     [MULTILINE_PARSER]
+                         name          multiline-backend
+                         type          regex
+                         flush_timeout 1000
+                         rule      "start_state"   "/^\[\d{4}-\d{2}-\d{2}\s+.*/"                         "cont"
+                         rule      "cont"          "/^(?!\[\d{4}-\d{2}-\d{2}\s+.*]).+/"                  "cont"
+  logLevel: debug

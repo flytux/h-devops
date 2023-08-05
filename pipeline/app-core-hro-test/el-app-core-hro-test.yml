@@ -453,6 +453,10 @@ spec:
           value: "main"
         - name: gitops-path
           value: "main"
+        - name: gitops-revision-dr
+          value: "dr"
+        - name: gitops-path-dr
+          value: "dr"
         - name: rollout-strategy
           value: "rolling"
         - name: deploy-manifest
@@ -525,6 +529,10 @@ spec:
           value: "main"
         - name: gitops-path
           value: "main"
+        - name: gitops-revision-dr
+          value: "dr"
+        - name: gitops-path-dr
+          value: "dr"
         - name: rollout-strategy
           value: "rolling"
         - name: deploy-manifest

@@ -1,0 +1,134 @@
+# Copyright © 2018 VMware, Inc. All Rights Reserved.
+# SPDX-License-Identifier: BSD-2-Clause
+
+# Default values for fluentd-router.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+rbac:
+  # rbac.create -- If `true`, create and use RBAC resources.
+  create: false
+  serviceAccount:
+    # rbac.serviceAccount.annotations -- Additional Service Account annotations.
+    annotations: {}
+
+serviceAccountName: "default"
+
+# Possible values: default|fake|fs|multimap|crd
+datasource: default
+
+# Use with datasource: default or datasource: multimap, crdMigrationMode enables also the crd datasource
+# together with the specified legacy datasource to facilitate the migration process to CRDs.
+crdMigrationMode: false
+
+defaultConfigmap: "fluentd-config"
+
+image:
+  repository: vmware/kube-fluentd-operator
+  pullPolicy: IfNotPresent
+  tag: latest
+  pullSecret: ""
+
+logLevel: debug
+fluentdLogLevel: debug
+interval: 45
+kubeletRoot: /var/lib/kubelet
+# bufferMountFolder -- a folder inside /var/log to write all fluentd buffers to
+bufferMountFolder: ""
+
+# fullnameOverride -- String to fully override `fluentd-router.fullname` template.
+fullnameOverride: ""
+
+meta:
+  key: ""
+  values: {}
+
+# Use with datasource: multimap, the label selector will be used for finding ConfigMaps inside
+# the Namespaces in order to compile the Namespace fluentd configuration. The simple concatenation
+# is used and the ConfigMap is then processed for macros.
+labelSelector:
+  matchLabels: {}
+
+#extraVolumes:
+#   - name: es-certs
+#     secret:
+#       defaultMode: 420
+#       secretName: es-certs
+
+#  - name: es-certs
+#    mountPath: /certs
+#    readOnly: true
+
+
+fluentd:
+  extraEnv: {}
+  resources: {}
+# extraVolumeMounts:
+#  - name: es-certs
+#    mountPath: /certs
+#    readOnly: true
+
+reloader:
+  extraEnv: {}
+  resources: {}
+# extraVolumeMounts:
+#  - name: es-certs
+#    mountPath: /certs
+#    readOnly: true
+
+tolerations: []
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+
+priorityClassName: ""
+
+updateStrategy: {}
+#  type: RollingUpdate
+
+## Annotations to add to the DaemonSet's Pods
+#podAnnotations:
+#  scheduler.alpha.kubernetes.io/tolerations: '[{"key": "example", "value": "foo"}]'
+
+prometheusEnabled: false
+metricsPort: 9000
+
+### Disable privileged access and running service as root
+#securityContext:
+#  runAsUser: 0
+#  runAsGroup: 0
+#  fsGroup: 0
+
+### By default, Fluentd does not rotate log files
+logRotate:
+  enabled: false
+# logRotateAge: 5
+# logRotateSize: 1048576000
+
+monitoring:
+  serviceMonitor:
+      # enable support for Prometheus Operator
+      enabled: false
+
+      # Job label for scrape target
+      jobLabel: app
+
+      # Scrape interval. If not set, the Prometheus default scrape interval is used.
+      interval: ""
+  # Create grafana dashboard with the chart
+  grafanaDashboard:
+    enabled: true
+
+allowTagExpansion: false
+
+# Change the following value to define a different namespace that is treated as admin
+# namespace, i.e. its configs are not validated or processed and virtual plugins can be
+# defined to be used in all other namespaces.
+adminNamespace: "kube-system"

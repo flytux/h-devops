@@ -193,7 +193,7 @@ spec:
             - secretRef:
                 name: hro-mm-channels
           #image: automatiko/automatiko-approval-task
-          image: tbd5d1uh.private-ncr.fin-ntruss.com/kubeadm/automatiko-approval-task:0.7.0
+          image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/automatiko-approval-task:v0.7.0
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3

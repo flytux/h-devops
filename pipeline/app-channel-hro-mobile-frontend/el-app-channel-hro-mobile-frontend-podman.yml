@@ -445,6 +445,8 @@ spec:
           value: $(tt.params.build-id)
         - name: remote-ip
           value: "10.1.10.6"
+        - name: remote-ip-2
+          value: "10.1.10.7"
         - name: application-name
           value: "channel-mobile-frontend-prd"
         - name: service-port
@@ -516,6 +518,8 @@ spec:
           value: $(tt.params.build-id)
         - name: remote-ip
           value: "10.1.10.6"
+        - name: remote-ip-2
+          value: "10.1.10.7"
         - name: application-name
           value: "channel-mobile-frontend-prd"
         - name: service-port

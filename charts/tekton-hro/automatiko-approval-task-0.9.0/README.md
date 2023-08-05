@@ -1,9 +1,10 @@
+---
+
 # Template source css path changed to local dir
 
 # Build with jdk17
 
-mvn clean package -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=tbd5d1uh.private-ncr.fin-ntruss.com -Dquarkus.container-image.username=959DEFE31E7314F09904 -Dquarkus.container-image.password=AC2BE61635E4FA44FD0CF618B4133AE22885AB92 -Dquarkus.jib.base-jvm-image=adoptopenjdk:jdk -P kubernetes
-
+mvn clean package -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=tbd5d1uh.private-ncr.fin-ntruss.com -Dquarkus.container-image.username=959DEFE31E7314F09904 -Dquarkus.container-image.password=AC2BE61635E4FA44FD0CF618B4133AE22885AB92 -Dquarkus.container-image.image=tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/automatiko-approval-task:v0.9.0 -Dquarkus.jib.base-jvm-image=eclipse-temurin:17-jdk-alpine -P kubernetes
 
 ---
 

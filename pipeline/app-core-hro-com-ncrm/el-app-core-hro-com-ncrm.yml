@@ -454,6 +454,10 @@ spec:
           value: "main"
         - name: gitops-path
           value: "app/core/$(tt.params.red-project-name)/main"
+        - name: gitops-revision-dr
+          value: "dr"
+        - name: gitops-path-dr
+          value: "app/core/$(tt.params.red-project-name)/dr"
         - name: rollout-strategy
           value: "rolling"
         - name: deploy-manifest
@@ -528,6 +532,10 @@ spec:
           value: "main"
         - name: gitops-path
           value: "app/core/$(tt.params.mattermost-channel)/main"
+        - name: gitops-revision-dr
+          value: "dr"
+        - name: gitops-path-dr
+          value: "app/core/$(tt.params.mattermost-channel)/dr"
         - name: rollout-strategy
           value: "rolling"
         - name: deploy-manifest

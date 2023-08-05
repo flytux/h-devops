@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: get-approval-config
+spec:
+  description: >-
+    Get approval config from configmap.
+  params:
+    - name: pipeline-name
+      type: string
+  results:
+    - name: approval-config
+  stepTemplate:
+    envFrom:
+    - configMapRef:
+        name: hro-approval-config
+  steps:
+    - name: get-approval-config
+      image: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/devops/library/bash:5.0.18
+      script: |
+        #!/usr/bin/env bash
+        PIPELINENAME="$(params.pipeline-name)"
+        echo "${!PIPELINENAME}" | tr -d "\n" | tee $(results.approval-config.path)

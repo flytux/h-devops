@@ -1,0 +1,28 @@
+{{/*
+Copyright © 2018 VMware, Inc. All Rights Reserved.
+SPDX-License-Identifier: BSD-2-Clause
+*/}}
+{{- if .Values.rbac.create }}
+{{- if (.Capabilities.APIVersions.Has (include "rbacAPIVersion" .)) -}}
+apiVersion: {{ template "rbacAPIVersion" . }}
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app: {{ template "fluentd-router.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    {{- if .Values.extraLabels }}
+{{ toYaml .Values.extraLabels | indent 4 }}
+    {{- end }}
+  name: {{ template "fluentd-router.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ template "fluentd-router.fullname" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ template "fluentd-router.fullname" . }}
+{{- end }}
+{{- end }}
