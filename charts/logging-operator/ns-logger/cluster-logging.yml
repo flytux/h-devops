@@ -5,6 +5,13 @@ metadata:
 spec:
   controlNamespace: elastic-system
     #  fluentbit:
+    #    extraVolumeMounts:apiVersion: logging.banzaicloud.io/v1beta1
+kind: Logging
+metadata:
+  name: logging-dev
+spec:
+  controlNamespace: elastic-system
+    #  fluentbit:
     #    extraVolumeMounts:
     #    - destination: /hro/nas_dev
     #      readOnly: true
@@ -47,7 +54,7 @@ spec:
     imagePullSecrets:
     - name: hero-reg
     repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/elastic-system/fluent/fluent-bit
-    tag: 2.1.8-mlp
+    tag: 2.1.8-debug
   inputTail:
     Path: /hro/nas_dev/dev/hro_app/core-com-api-dev/log/*.log
     Path_Key: filename
@@ -55,14 +62,19 @@ spec:
       - java
       - hero-multiline-parser
   customParsers: |
+    [PARSER]
+        Name hero-log-parser
+        Format regex
+        Regex ^\[(?<time>[^ ].*)\]\[(?<pid>[^ ]*)\]\s+(?<type>[A-Z]+)\s+(?<app>([a-z].*))\s+\[(?<code>[0-9]{2,4})\]-\[(?<message>.*)
+        Time_key time
     [MULTILINE_PARSER]
-    name          hero-multiline-parser
-    type          regex
-    flush_timeout 1000
-    rule      "start_state"   "/^\[\d{4}-\d{2}-\d{2}\s+.*/"         "cont"
-    rule      "cont"          "^(\s+|\||[0-9]).*"                   "cont"
-    rule      "cont"          "^$"                                  "cont"
-    rule      "cont"          "^}$"                                 "cont"
+        name          hero-multiline-parser
+        type          regex
+        flush_timeout 1000
+        rule      "start_state"   "/^\[\d{4}-\d{2}-\d{2}\s+.*/"                         "cont"
+        rule      "cont"          "^(\s+|\||[0-9]).*"                                   "cont"
+        rule      "cont"          "^$"                                                  "cont"
+        rule      "cont"          "^}$"                                                 "cont"
   logLevel: debug
 ---
 apiVersion: logging.banzaicloud.io/v1beta1
@@ -73,6 +85,13 @@ spec:
   filters:
   - detectExceptions: 
       multiline_flush_interval: "1"  
+  - parser:
+      reserve_data: true
+      reserve_time: true
+      key_name: log
+      parse:
+        type: regexp
+        expression: ^\[(?<time>[^ ].*)\]\[(?<pid>[^ ]*)\]\s+(?<type>[A-Z]+)\s+(?<app>([a-z]|\.)*[A-Z]\w+)\s+\[(?<code>[0-9]{2,4})\]-\[(?<message>.*)
   globalOutputRefs: 
   - clusteroutput-es
 ---
